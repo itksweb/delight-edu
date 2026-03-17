@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Multi Select</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="multi-select">
+                <select
+                    name="multiSelectOption"
+                    hidden
+                    multiple
+                >
+                    <option value="Option A">Option A</option>
+                    <option value="Option B">Option B</option>
+                    <option value="Option C">Option C</option>
+                    <option value="Option D">Option D</option>
+                </select>
+                <button type="button" class="multi-select-button">
+                    <span class="selected-tags">
+                        <span class="placeholder">Choose</span>
+                    </span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </button>
+
+                <div class="dropdown-content">
+                    <ul
+                        style="padding-top: 0.25rem; padding-bottom: 0.25rem"
+                        role="menu"
+                        aria-orientation="vertical"
+                        aria-labelledby="multiSelectDropdownButton"
+                    >
+                        <template id="check-option">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="feather feather-check"
+                                style="display: none"
+                            >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
