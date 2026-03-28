@@ -4,23 +4,23 @@ namespace DelightEDU\Controllers\Admin\Admin;
 use DelightEDU\Models\StaffModel;
 use DelightEDU\Models\StaffRole;
 use DelightEDU\Roles\PermissionsRegistry;
+use DelightEDU\Assets\Admin\Helpers;
 
 class StaffController {
     private $model;
+ 
 
     public function __construct() {
         $this->model = new StaffModel();
-        add_action( 'admin_post_dedu_save_staff', [ $this, 'handle_save_staff' ] );
     }
 
     public function get_staff_schema() {
         return [
+            'profile_picture_id'    => ['filter' => 'absint',  'format' => '%d'],
             'first_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'middle_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'last_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'profile_picture'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'email'         => ['filter' => 'sanitize_email',      'format' => '%s'],
-            'password'         => ['filter' => 'wp_hash_password',      'format' => '%s'],
             'phone'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'gender'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'marital_status'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
@@ -34,35 +34,7 @@ class StaffController {
             'class_id'       => ['filter' => 'absint',              'format' => '%d'],
         ];
     }
-    public function sanitize_data() {
-        $schema = $this->get_staff_schema();
-        $data_to_save = [];
-        $format_array = [];
-
-         // Handle File Upload
-        $profile_picture_url = '';
-        if (!empty($_FILES['staff_photo']['name'])) {
-            $profile_picture_url = $this->upload_photo_get_its_url('staff_photo');
-        }
-
-        foreach ($schema as $column => $rules) {
-            if ($column ==='profile_picture' && $profile_picture_url) {
-                $data_to_save[$column] = $profile_picture_url;
-                $format_array[] = $rules['format']; 
-                continue;
-            }
-            if ($column ==='role_id' && !isset($_POST[$column]) ) {
-                $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
-                $format_array[] = $rules['format']; 
-                continue;
-            }
-            if (isset($_POST[$column])) {
-                $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
-                $format_array[] = $rules['format']; // Automatically adds the right %s, %d, or %f
-            }
-        }
-        return [$data_to_save, $format_array];
-    }
+    
 
     public function render_staff_page() {
         $staff_members = $this->model->get_all();
@@ -106,7 +78,6 @@ class StaffController {
         }
 
         $staff_id = isset($_POST['id']) ? absint($_POST['id']) : 0;
-        // $model = new StaffModel();
         
         // Fetch the main record
         $staff = $this->model->get_staff_by_id($staff_id);
@@ -115,39 +86,66 @@ class StaffController {
             wp_send_json_error('Staff member not found');
         }
 
-        // Fetch this staff's specific overrides from dedu_staff_capabilities
-        $overrides = $this->model->get_staff_permissions($staff_id);
+        // Fetch this staff's specific permissions from dedu_staff_capabilities
+        $permissions = $this->model->get_staff_permissions($staff_id);
+        
+        $photo_url = isset($staff['profile_picture_id']) ? wp_get_attachment_url($staff['profile_picture_id']) : $default_avatar_url;
+        $staff['photo_url'] = $photo_url;
 
         wp_send_json_success([
             'staff' => $staff,
-            'permissions' => $overrides // Array of slugs: ['view_students', 'add_staff']
+            'permissions' => $permissions // Array of slugs: ['view_students', 'add_staff']
         ]);
     }
 
+    //create and update method
     public function handle_save_staff() {
         // 1. Security Check
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'dedu_staff_nonce')) {
             wp_die('Security check failed');
         }
-
-        $data = $this->sanitize_data();
-    
-        $model = new StaffModel();
+        
+        $model = $this->model;
         $staff_id = isset($_POST['staff_db_id']) ? absint($_POST['staff_db_id']) : 0;
 
         if ($staff_id > 0) {
             //UPDATE EXISTING
-            $result = $model->update($staff_id, $data[0]);
+            $result = $model->update($staff_id);
             $redirect_msg = 'staff_updated';
         } else {
             // CREATE NEW
-            $result = $model->create($data);
+            $result = $model->create();
             $redirect_msg = 'staff_created';
         }
 
         // 2. Redirect back to the directory with a success message
         $redirect_url = admin_url('admin.php?page=dedu-staff&message=' . $redirect_msg);
         wp_redirect($redirect_url);
+        exit;
+    }
+
+    public function handle_delete_staff() {
+        $id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+
+        // 1. Security Check (Nonce)
+        if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'dedu_delete_staff_' . $id ) ) {
+            wp_die( 'Security check failed.' );
+        }
+
+        // 2. Authorization
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized.' );
+        }
+        $referer = wp_get_referer();
+
+        $staff_model = new StaffModel();
+        if ( $staff_model->delete( $id ) ) {
+            // If we have a referer, add the message to it; otherwise, use a default
+            $redirect_url = $referer ? add_query_arg( 'message', 'staff_deleted', $referer ) : admin_url( 'admin.php?page=dedu-roles&message=staff_deleted' );
+            wp_redirect( $redirect_url );
+        } else {
+            wp_redirect( add_query_arg('error','delete_failed', $referer) );
+        }
         exit;
     }
 }

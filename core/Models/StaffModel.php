@@ -1,5 +1,8 @@
 <?php
 namespace DelightEDU\Models;
+use DelightEDU\Assets\Admin\Helpers;
+
+
 
 class StaffModel {
     private $table_name;
@@ -12,63 +15,60 @@ class StaffModel {
         $this->table_caps  = $wpdb->prefix . 'dedu_staff_capabilities';
     }
 
-    /**
-     * Generates a unique Staff ID based on prefix and year.
-     * Checks against database to prevent collisions.
-     */
-    private function generate_unique_id($prefix) {
-        global $wpdb;
-
-        $is_unique = false;
-        $final_id  = '';
-        $attempts  = 0;
-
-        while (!$is_unique && $attempts < 10) {
-            // Generate potential ID: PREFIX-YY-RAND(3)
-            $potential_id = $prefix . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-
-            // Check database
-            $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$this->table_name} WHERE staff_id_number = %s",
-                $potential_id
-            ));
-
-            if ($exists == 0) {
-                $final_id = $potential_id;
-                $is_unique = true;
-            }
-            $attempts++;
-        }
-
-        // fallback if for some crazy reason 10 random attempts fail
-        return $is_unique ? $final_id : $prefix . time();
+    public function get_staff_schema() {
+        return [
+            'profile_picture_id'    => ['filter' => 'absint',  'format' => '%d'],
+            'first_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'middle_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'last_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'email'         => ['filter' => 'sanitize_email',      'format' => '%s'],
+            'phone'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'gender'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'marital_status'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'date_of_birth'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'role_id'       => ['filter' => 'absint',              'format' => '%d'],
+            'position'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'working_hours'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'is_teacher'       => ['filter' => 'absint',              'format' => '%d'],
+            'salary_amount' => ['filter' => 'floatval',            'format' => '%f'],
+            'joining_date'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'class_id'       => ['filter' => 'absint',              'format' => '%d'],
+        ];
     }
 
+    
     /**
      * Create a new Staff Member
      */
-    public function create($dataArr) {
-        global $wpdb;
-        $data = $dataArr[0];
-        $formats = $dataArr[1];
+    public function create() {
+        global $wpdb;        
 
         // 1. Check if email already exists in WordPress to prevent fatal errors
         if (email_exists($_POST['email']) || username_exists($_POST['email'])) {
-           return new WP_Error('email_exists', 'This email is already registered in the system.');
+           return new \WP_Error('email_exists', 'This email is already registered in the system.');
         }
        
         // 2. Create the WordPress User first
-        $user_id = wp_create_user( $data['email'], $_POST['password'], $data['email'] );
+        $user_id = Helpers::create_wp_user();
         if (is_wp_error($user_id)) return $user_id;
+        
+        // Sanitize the data
+        $schema = $this->get_staff_schema();
+        $photoKey = !isset($_POST['staff_photo']) ? 'staff_photo':'';
+        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
+
+        //  Generate Staff ID Number
+        $prefix = get_option('dedu_staff_id_prefix', 'EDU');
+        $prefix = rtrim($prefix, '-') . '-' . date('y') . '-';
+        $staff_id_number = Helpers::generate_unique_id($prefix);
 
         $prep = [];
         $prep["wp_user_id"] = $user_id;
-
-        $prefix = get_option('dedu_staff_id_prefix', 'EDU');
-        $prefix = rtrim($prefix, '-') . '-' . date('y') . '-';
-        $staff_id_number = $this->generate_unique_id($prefix);
         $prep['staff_id_number'] = $staff_id_number;
 
+        
+        $data = $sanitized_data[0];
+        $formats = $sanitized_data[1];
         $data = $prep + $data;
         $formats = ['%d', '%s'] + $formats;
 
@@ -139,16 +139,24 @@ class StaffModel {
         ");
     }
 
-    public function update($staff_id, $data) {
+    public function update($staff_id) {
         global $wpdb;
+
+         // Sanitize the data
+        $schema = $this->get_staff_schema();
+        $photoKey = !isset($_POST['staff_photo']) ? 'staff_photo':'';
+        $user_id = isset($_POST['wp_user_id']) ? absint($_POST['wp_user_id']): null;
+        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
+
+        $data = $sanitized_data[0];
 
         if (isset($_POST['staff_permissions']) && is_array($_POST['staff_permissions'])) {
             $table_staff_caps = $wpdb->prefix . 'dedu_staff_capabilities'; 
             
-            // 1. Clear old overrides for this staff
+            // 1. Clear old permissions for this staff
             $wpdb->delete($table_staff_caps, ['staff_id' => $staff_id], ['%d']);
             
-            // 2. Insert new overrides
+            // 2. Insert new permissions
             foreach ($_POST['staff_permissions'] as $cap) {
                 $wpdb->insert($table_staff_caps, [
                     'staff_id' => $staff_id,
@@ -156,26 +164,6 @@ class StaffModel {
                 ]);
             }
         }
-
-        $update_data = [
-            'first_name'     => sanitize_text_field($data['first_name']),
-            'last_name'      => sanitize_text_field($data['last_name']),
-            'email'          => sanitize_email($data['email']),
-            'phone'          => sanitize_text_field($data['phone'] ?? ''),
-            'role_id'        => !empty($data['role_id']) ? absint($data['role_id']) : null,
-            'is_teacher'     => isset($data['is_teacher']) ? 1 : 0,
-            'class_id'       => !empty($data['class_id']) ? absint($data['class_id']) : null,
-            'status'         => sanitize_text_field($data['status'] ?? 'active'),
-        ];
-
-        // Only update password if a new one is provided
-        if (!empty($_POST['password'])) $_POST['password'] = wp_hash_password($_POST['password']);
-        // if (!empty($_FILES['staff_photo']['name'])) {
-        //     $new_url = $this->upload_photo_get_its_url('staff_photo');
-        //     if ($new_url) {
-        //         $update_data['profile_picture'] = $new_url;
-        //     }
-        // }
 
         return $wpdb->update(
             $this->table_name,
@@ -204,9 +192,7 @@ class StaffModel {
         }
         return $staff;
     }
-    /**
-     * Needed for the individual permission overrides
-     */
+    
     public function get_staff_permissions($staff_id) {
         global $wpdb;
         $table_staff_caps = $wpdb->prefix . 'dedu_staff_capabilities';
@@ -218,5 +204,18 @@ class StaffModel {
         ));
 
         return $results ? $results : [];
+    }
+
+    /**
+     * Get a single column value from the staff table
+     */
+    public function get_staff_column($staff_id, $column_name) {
+        global $wpdb;
+        
+        // Use %i for identifiers (column names) and %d for the ID
+        return $wpdb->get_var($wpdb->prepare(
+            "SELECT $column_name FROM {$this->table_name} WHERE id = %d", 
+            $staff_id
+        ));
     }
 }

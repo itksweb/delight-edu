@@ -1,101 +1,130 @@
 <?php
 namespace DelightEDU\Assets\Admin;
 
+
 class Helpers {
 
-    
-    public function get_staff_schema() {
-        return [
-            'first_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'middle_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'last_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'profile_picture'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'email'         => ['filter' => 'sanitize_email',      'format' => '%s'],
-            'password'         => ['filter' => 'wp_hash_password',      'format' => '%s'],
-            'phone'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'gender'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'marital_status'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'date_of_birth'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'role_id'       => ['filter' => 'absint',              'format' => '%d'],
-            'position'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'working_hours'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'is_teacher'       => ['filter' => 'absint',              'format' => '%d'],
-            'salary_amount' => ['filter' => 'floatval',            'format' => '%f'],
-            'joining_date'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'class_id'       => ['filter' => 'absint',              'format' => '%d'],
-        ];
-    }
-
-    public function get_stafff_schema() {
-        return [
-            'staff_id_number' => 'sanitize_text_field',
-            'first_name'      => 'sanitize_text_field',
-            'last_name'       => 'sanitize_text_field',
-            'email'           => 'sanitize_email',
-            // Use a closure for fields with custom logic
-            'password'        => function($val) { return !empty($val) ? wp_hash_password($val) : null; },
-            'phone'           => 'sanitize_text_field',
-            'gender'          => 'sanitize_text_field',
-            'marital_status'  => 'sanitize_text_field',
-            'date_of_birth'   => function($val) { return !empty($val) ? sanitize_text_field($val) : null; },
-            'role_id'         => function($val) { return !empty($val) ? absint($val) : null; },
-            'position'        => 'sanitize_text_field',
-            'working_hours'   => function($val) {return !empty($val) ? sanitize_text_field($val) : 'full-time';},
-            'is_teacher'      => function($val) { return isset($val) ? 1 : 0; },
-            'salary_amount'   => 'floatval',
-            'joining_date'    => function($val) { return !empty($val) ? sanitize_text_field($val) : current_time('mysql', 1); },
-            'class_id'        => 'absint',
-        ];
-    }
-
-    public function get_stav_schema($context = 'create') {
-        // 1. Define common fields that appear in both
-        $schema = [
-            'first_name' => 'sanitize_text_field',
-            'last_name'  => 'sanitize_text_field',
-            'email'      => 'sanitize_email',
-            'password'        => function($val) { return !empty($val) ? wp_hash_password($val) : null; },
-            'phone'           => 'sanitize_text_field',
-            'gender'          => 'sanitize_text_field',
-            'marital_status'  => 'sanitize_text_field',
-            'date_of_birth'   => function($val) { return !empty($val) ? sanitize_text_field($val) : null; },
-            'role_id'         => function($val) { return !empty($val) ? absint($val) : null; },
-            'position'        => 'sanitize_text_field',
-            'working_hours'   => function($val) {return !empty($val) ? sanitize_text_field($val) : 'full-time';},
-            'is_teacher'      => function($val) { return isset($val) ? 1 : 0; },
-            // ... etc
-        ];
-
-        // 2. Add 'create'-only fields
-        if ($context === 'create') {
-            $schema['joining_date'] = function($val) { return !empty($val) ? sanitize_text_field($val) : current_time('mysql', 1); };
-            $schema['staff_id_number'] = 'sanitize_text_field';
-        } 
-        
-        // 3. Add 'update'-only logic (e.g., optional password)
-        if ($context === 'update') {
-            // $schema['password'] = function($val) { return !empty($val) ? wp_hash_password($val) : null; };
-        }
-
-        return $schema;
-    }
-
-    /**
-     * Sanitizes input based on a mapping schema
-     * @param array $input The raw data (usually $_POST)
-     * @param array $schema Keys are form fields, values are sanitizer functions
-     */
-    public function sanitize_data() {
-        $schema = $this->get_staff_schema();
+    public static function sanitize_data($schema, $wp_user_id, $photo = "") {
         $data_to_save = [];
         $format_array = [];
 
+        // Handle File Upload
+        $profile_picture_id = '';
+        if ($photo) {
+           if (!empty($_FILES[$photo]['name'])) {
+                $profile_picture_id = self::upload_staff_photo($photo, $wp_user_id ); 
+            }
+        }
+        
+
         foreach ($schema as $column => $rules) {
+            if ($column ==='profile_picture_id' && $profile_picture_id) {
+                $data_to_save[$column] = $profile_picture_id;
+                $format_array[] = $rules['format']; 
+                continue;
+            }
+            if ($column ==='role_id' && !isset($_POST[$column]) ) {
+                $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
+                $format_array[] = $rules['format']; 
+                continue;
+            }
             if (isset($_POST[$column])) {
                 $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
                 $format_array[] = $rules['format']; // Automatically adds the right %s, %d, or %f
             }
         }
         return [$data_to_save, $format_array];
+    }
+
+    public static function generate_unique_id($prefix) {
+        global $wpdb;
+
+        $is_unique = false;
+        $final_id  = '';
+        $attempts  = 0;
+
+        while (!$is_unique && $attempts < 10) {
+            // Generate potential ID: PREFIX-YY-RAND(3)
+            $potential_id = $prefix . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $table_name = $wpdb->prefix . 'dedu_staff';
+
+            // Check database
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $table_name WHERE staff_id_number = %s",
+                $potential_id
+            ));
+
+            if ($exists == 0) {
+                $final_id = $potential_id;
+                $is_unique = true;
+            }
+            $attempts++;
+        }
+
+        // fallback if for some crazy reason 10 random attempts fail
+        return $is_unique ? $final_id : $prefix . time();
+    }
+
+    public static function upload_photo_get_its_url($file_key) {
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        $attachment_id = media_handle_upload($file_key, 0); 
+
+        if (!is_wp_error($attachment_id)) {
+            return wp_get_attachment_url($attachment_id);
+        }
+        
+        return false; // Return false so we know it failed
+    }
+
+    public static function upload_staff_photo($file_key, $wp_user_id) {
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        // 1. Upload the new photo and attach it to the staff's WP User ID
+        $attachment_id = media_handle_upload($file_key, $wp_user_id); 
+
+        // 2. If upload succeeded, return the ID to save in your staff table
+        if (!is_wp_error($attachment_id)) return $attachment_id; 
+        
+        // Get the old photo ID (if it exists)
+        // $old_photo_id = $staff_id ? $this->get_staff_column($staff_id, 'profile_picture_id') : null ;
+        // if ($old_photo_id) wp_delete_attachment($old_photo_id, true); // true = bypass trash
+        return false;
+    }
+
+    public static function update_wp_user() {
+        $user_data = [
+            'ID'         => absint($_POST['wp_user_id']),
+            'user_email' => sanitize_email($_POST['email']),
+        ];
+
+        // Only update password if a new one was actually provided
+        if (!empty($_POST['password'])) {
+            $user_data['user_pass'] = $_POST['password']; // WP hashes this automatically
+        }
+
+        return wp_update_user($user_data);
+    }
+
+    public static function create_wp_user() {
+        $username = sanitize_user($_POST['email']); // Or generate a specific format
+        $password = !empty($_POST['password']) ? $_POST['password'] : wp_generate_password();
+
+        $wp_user_id = wp_create_user($username, $password, sanitize_email($_POST['email']));
+        
+        if (!is_wp_error($wp_user_id)) {
+            // Set their role to something specific like 'subscriber' or 'staff'
+            $user = new \WP_User($wp_user_id);
+            $user->set_role('subscriber');
+        }
+
+        return $wp_user_id;
+    }
+    public static function dedu_get_current_year() {
+        return get_option('dedu_current_academic_year', '2025/2026');
     }
 }

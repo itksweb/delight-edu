@@ -1,31 +1,17 @@
+<?php
+if (!defined('ABSPATH')) exit;
+$part = \DEDU_PATH . 'templates/admin/partials';
+$data_name = "class";
+$tspan = "5"
+?>
+
 <div class="wrap dedu-admin-wrapper" data-type="class">
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Classes And Sections Management</h1>
     </div>
     <div class="dedu-card" id="dedu-list-view" >
-        <div class="dedu-tab-header">
-            <h3>Class List</h3>
-            <button id="show-form-btn" class="dedu-btn dedu-btn-primary">
-                <span class="dashicons dashicons-plus"></span>
-                Add New Class
-            </button>
-        </div>
-        <div class="dedu-table-toolbar">
-            <div class="dedu-toolbar-left">
-                <select id="dedu-bulk-action-selector" class="dedu-dropdown-btn">
-                    <option value="">Bulk Actions</option>
-                    <option value="delete">Delete</option>
-                    <option value="edit">Edit</option>
-                </select>
-                <button type="button" id="dedu-apply-bulk-action" class="dedu-btn-apply">Apply</button>
-            </div>
-            <div class="dedu-toolbar-right">
-                <div class="dedu-search-wrapper">
-                    <span class="dashicons dashicons-search"></span>
-                    <input type="text" id="dedu-search" placeholder="Filter classes..." class="dedu-search-input">
-                </div>
-            </div>
-        </div>
+        <?php include("{$part}/tab-list-header.php") ?>
+        <?php include("{$part}/table-top.php") ?>
         <div class="dedu-table-container">
             <table class="dedu-table-modern dedu-js-paginated">
                 <thead>
@@ -39,20 +25,13 @@
                 </thead>
                 <tbody>
                     <?php if ( empty( $all_classes ) ) : ?>
-                        <tr class="dedu-no-data-static">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-database"></span>
-                                    <p>No classes found. Start by creating your first class!</p>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php include("{$part}/no-data.php") ?>
                     <?php else : ?>
                     <?php foreach ($all_classes as $class) : ?>
-                        <tr>
+                        <tr class="is-row">
                             <td class="col-cb"><input type="checkbox" class="dedu-selection-checkbox" value="<?php echo $class->id; ?>">
                                     </td>
-                            <td><strong><?php echo esc_html($class->class_name); ?></strong></td>
+                            <td class="text-heading"><?php echo esc_html($class->class_name); ?></td>
                             <td><?php echo esc_html($class->numeric_name); ?></td>
                             <td>
                                 <?php 
@@ -94,50 +73,15 @@
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                    <tr id="dedu-no-search-results" style="display: none;">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-search"></span>
-                                    <p>No classes match your search criteria.</p>
-                                </div>
-                            </td>
-                        </tr>
+                    <?php include("{$part}/no-search-result.php") ?>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <div class="dedu-table-footer">
-            <div class="dedu-table-footer-left">
-                <label for="dedu-rows-per-page">Show</label>
-                <select id="dedu-rows-per-page" class="dedu-select-sm">
-                    <option value="2" >2</option>
-                    <option value="5" selected >5</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                </select>
-                <span>entries</span>
-            </div>
-
-            <div class="dedu-table-footer-right">
-                <div class="dedu-pagination-info">
-                    Showing <span id="current-visible-range">0-0</span> of <span id="total-visible-items">0</span>
-                </div>
-                <div class="dedu-pagination-controls">
-                    <button type="button" id="prev-page" class="butt">‹</button>
-                    <span id="page-numbers"></span>
-                    <button type="button" id="next-page" class="butt">›</button>
-                </div>
-            </div>
-        </div>
+        <?php include("{$part}/table-bottom.php") ?>
     </div>
     <div class="dedu-card hide-me" id="dedu-form-view"  >
-        <div class="dedu-tab-header">
-            <h3>Add A New Class</h3>
-            <button id="show-list-btn" class="dedu-btn dedu-btn-primary">
-                <span class="dashicons dashicons-list-view"></span>
-                Back to List
-            </button>
-        </div>
+        <?php include("{$part}/tab-form-header.php") ?>
         <form method="POST" action="<?php echo admin_url('admin-post.php'); ?>">
             <input type="hidden" name="action" value="dedu_save_class_complex">
             <?php wp_nonce_field('dedu_class_complex_action', 'dedu_nonce'); ?>

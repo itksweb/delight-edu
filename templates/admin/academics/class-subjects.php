@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
-
+$part = \DEDU_PATH . 'templates/admin/partials';
+$data_name = "class subjects";
+$tspan = "5";
 $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 ?>
 
@@ -12,32 +14,12 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
         <div class="notice notice-success is-dismissible"><p>Curriculum updated successfully for the class.</p></div>
     <?php endif; ?>
     <div class="dedu-card" id="dedu-list-view">
-        <div class="dedu-tab-header">
-            <h3>Class subjects List</h3>
-            <a href="<?php echo admin_url('admin.php?page=dedu-subjects'); ?>" 
-                class="page-title-action dedu-btn dedu-btn-primary">Manage Master Subjects
-            </a>
-        </div>
+        <?php include("{$part}/tab-list-header.php") ?>
         
         <p class="description">
             Below is a list of all classes. Click <strong>"Manage Curriculum"</strong> to assign or edit subjects for a specific class and its sections.
         </p>
-        <div class="dedu-table-toolbar">
-            <div class="dedu-toolbar-left">
-                <select id="dedu-bulk-action-selector" class="dedu-dropdown-btn">
-                    <option value="">Bulk Actions</option>
-                    <option value="delete">Delete</option>
-                    <option value="edit">Edit</option>
-                </select>
-                <button type="button" id="dedu-apply-bulk-action" class="dedu-btn-apply">Apply</button>
-            </div>
-            <div class="dedu-toolbar-right">
-                <div class="dedu-search-wrapper">
-                    <span class="dashicons dashicons-search"></span>
-                    <input type="text" id="dedu-search" placeholder="Filter roles..." class="dedu-search-input">
-                </div>
-            </div>
-        </div>
+        <?php include("{$part}/table-top.php") ?>
         <div class="dedu-table-container">
             <table class="dedu-table-modern" style="min-width: 400px;">
                 <thead>
@@ -51,30 +33,21 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                 </thead>
                 <tbody>
                     <?php if ( empty( $classes_with_counts ) ) : ?>
-                        <tr class="dedu-no-data-static">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-database"></span>
-                                    <p>No classes found. Start by creating your first class!</p>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php include("{$part}/no-data.php") ?>
                     <?php else : ?>
                         <?php foreach ( $classes_with_counts as $item ) : ?>
-                            <tr>
+                            <tr class="is-row">
                                 <td class="col-cb">
                                     <input type="checkbox" class="dedu-selection-checkbox" value="<?php echo $item->id; ?>">
                                 </td>
-                                <td class="column-primary">
-                                    <strong>
-                                        <a href="javascript:void(0);" style="text-decoration:none;" data-id="<?php echo $item->id; ?>"
-                                            class="dedu-action-link edit manage-curriculum dedu-edit-icon"
+                                <td class="">
+                                        <a href="javascript:void(0);" style="text-decoration:none;"         data-id="<?php echo $item->id; ?>"
+                                            class="dedu-action-link edit text-heading manage-curriculum dedu-edit-icon"
                                             data-curriculum="<?php echo esc_attr($item->curriculum_json); ?>"
                                             data-name="<?php echo esc_attr($item->class_name); ?>"
                                             title="Edit">
                                             <?php echo esc_html($item->class_name); ?>
                                         </a>
-                                    </strong>
                                 </td>
                                 <td>
                                     <span class="count-pill <?php echo ($item->subject_count > 0) ? 'has-subjects' : 'no-subjects'; ?>">
@@ -94,50 +67,15 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr id="dedu-no-search-results" style="display: none;">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-search"></span>
-                                    <p>No class match your search criteria.</p>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php include("{$part}/no-search-result.php") ?>
                     <?php endif; ?>    
                 </tbody>
             </table>
         </div>
-        <div class="dedu-table-footer">
-            <div class="dedu-table-footer-left">
-                <label for="dedu-rows-per-page">Show</label>
-                <select id="dedu-rows-per-page" class="dedu-select-sm">
-                    <option value="2" >2</option>
-                    <option value="5" selected>5</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                </select>
-                <span>entries</span>
-            </div>
-
-            <div class="dedu-table-footer-right">
-                <div class="dedu-pagination-info">
-                    Showing <span id="current-visible-range">0-0</span> of <span id="total-visible-items">0</span>
-                </div>
-                <div class="dedu-pagination-controls">
-                    <button type="button" id="prev-page" class="butt">‹</button>
-                    <span id="page-numbers"></span>
-                    <button type="button" id="next-page" class="butt">›</button>
-                </div>
-            </div>
-        </div>
+        <?php include("{$part}/table-bottom.php") ?>
     </div> 
     <div class="dedu-card hide-me" id="dedu-form-view">
-        <div class="dedu-tab-header">
-            <h3>Add A New </h3>
-            <button id="show-list-btn" class="dedu-btn dedu-btn-primary">
-                <span class="dashicons dashicons-list-view"></span>
-                Back to List
-            </button>
-        </div>
+        <?php include("{$part}/tab-form-header.php") ?>
         <form action="<?php echo admin_url('admin-post.php'); ?>" method="post">
             <input type="hidden" name="action" value="dedu_bulk_save_curriculum">
             <input type="hidden" name="class_id" value="">

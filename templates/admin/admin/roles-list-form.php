@@ -1,56 +1,36 @@
+<?php
+if (!defined('ABSPATH')) exit;
+$part = \DEDU_PATH . 'templates/admin/partials';
+$data_name = "role";
+$tspan = "4"
+?>
+
 <div class="wrap list-form dedu-admin-wrapper" data-type="role"> 
     <!-- <?php wp_nonce_field('dedu_bulk_roles_action', 'dedu-role-nonce'); ?> -->
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Staff Roles Management</h1>
     </div>
     <div class="dedu-card" id="dedu-list-view">
-        <div class="dedu-tab-header">
-            <h3>Role List</h3>
-            <button id="show-form-btn" class="dedu-btn dedu-btn-primary">
-                <span class="dashicons dashicons-plus"></span>
-                Add New Staff Role
-            </button>
-        </div>
-        <div class="dedu-table-toolbar">
-            <div class="dedu-toolbar-left">
-                <select id="dedu-bulk-action-selector" class="dedu-dropdown-btn">
-                    <option value="">Bulk Actions</option>
-                    <option value="delete">Delete</option>
-                    <option value="edit">Edit</option>
-                </select>
-                <button type="button" id="dedu-apply-bulk-action" class="dedu-btn-apply">Apply</button>
-            </div>
-            <div class="dedu-toolbar-right">
-                <div class="dedu-search-wrapper">
-                    <span class="dashicons dashicons-search"></span>
-                    <input type="text" id="dedu-search" placeholder="Filter roles..." class="dedu-search-input">
-                </div>
-            </div>
-        </div>
+        <?php include("{$part}/tab-list-header.php") ?>
+        <?php include("{$part}/table-top.php") ?>
         <div class="dedu-table-container">
             <table class="dedu-table-modern" style="min-width: 400px;">
                 <thead>
                     <tr>
                         <th class="col-cb"><input type="checkbox" id="dedu-select-all"></th>
                         <th>Role Name</th>
-                        <th>Permissions Assigned</th> <th style="text-align: right;">Actions</th>
+                        <th>Permissions Assigned</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if ( empty( $all_roles ) ) : ?>
-                        <tr class="dedu-no-data-static">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-database"></span>
-                                    <p>No roles found. Start by creating your first role!</p>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php include("{$part}/no-data.php") ?>
                     <?php else : ?>
                         <?php foreach ( $all_roles as $role ) : 
                             $cap_count = isset($role->cap_count) ? $role->cap_count : 0;
                         ?>
-                            <tr>
+                            <tr class="is-row">
                                 <td class="col-cb">
                                     <input type="checkbox" class="dedu-selection-checkbox" value="<?php echo $role->id; ?>">
                                 </td>
@@ -80,41 +60,12 @@
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr id="dedu-no-search-results" style="display: none;">
-                            <td colspan="4">
-                                <div class="dedu-empty-state">
-                                    <span class="dashicons dashicons-search"></span>
-                                    <p>No roles match your search criteria.</p>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php include("{$part}/no-search-result.php") ?>
                     <?php endif; ?>    
                 </tbody>
             </table>
         </div>
-        <div class="dedu-table-footer">
-            <div class="dedu-table-footer-left">
-                <label for="dedu-rows-per-page">Show</label>
-                <select id="dedu-rows-per-page" class="dedu-select-sm">
-                    <option value="2" selected>2</option>
-                    <option value="5" >5</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                </select>
-                <span>entries</span>
-            </div>
-
-            <div class="dedu-table-footer-right">
-                <div class="dedu-pagination-info">
-                    Showing <span id="current-visible-range">0-0</span> of <span id="total-visible-items">0</span>
-                </div>
-                <div class="dedu-pagination-controls">
-                    <button type="button" id="prev-page" class="butt">‹</button>
-                    <span id="page-numbers"></span>
-                    <button type="button" id="next-page" class="butt">›</button>
-                </div>
-            </div>
-        </div>   
+        <?php include("{$part}/table-bottom.php") ?>   
     </div>
     <div class="dedu-card hide-me" id="dedu-form-view"  >
         <?php
@@ -128,13 +79,7 @@
                 : array_map('trim', explode(',', $role->capabilities));
         }
         ?>
-        <div class="dedu-tab-header">
-            <h3>Add A New Staff role</h3>
-            <button id="show-list-btn" class="dedu-btn dedu-btn-primary">
-                <span class="dashicons dashicons-list-view"></span>
-                Back to List
-            </button>
-        </div>
+        <?php include("{$part}/tab-form-header.php") ?>
         <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
             <input type="hidden" name="action" value="dedu_save_role">
             <?php if ( $is_edit ) : ?>

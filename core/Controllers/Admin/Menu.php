@@ -110,7 +110,10 @@ class Menu {
             'delete_failed'   => 'Could not delete the record.',
             'staff_deleted' => 'Staff deleted successfully',
             'staff_created' => 'Staff created successfully',
-            'staff_updated' => 'Staff updated successfully'
+            'staff_updated' => 'Staff updated successfully',
+            'subject_created' => 'Subject successfully added to master list',
+            'subject_updated' => 'Subject successfully updated in master list',
+            'subject_deleted'   => 'Subject removed successfully.',
         ];
 
         $text = '';
@@ -137,6 +140,9 @@ class Menu {
             return;
         }
 
+         //  Enqueue base JS
+        wp_enqueue_script('dedu-base', \DEDU_URL . 'assets/js/base.js', [], '1.1.4', true );
+
         //Selectively enqueue the appropriate js script for each page
         $parts = explode('_page_', $hook);
         $slug = end($parts);
@@ -153,33 +159,18 @@ class Menu {
             );
             }
         }
+
+        // Enqueue Your JS
+        wp_enqueue_script(
+            'dedu-admin-scripts', 
+            \DEDU_URL . 'assets/js/admin-scripts.js', 
+            ['jquery'], 
+            '1.1.4', 
+            true 
+        );
         
 
-        // 1. Conditionally Enqueue Select2
-        // We only load this on the Curriculum/Subject assignment page to save resources
-        if ( strpos( $hook, 'dedu-subjects-assign' ) !== false ) {
-            wp_enqueue_style(
-                'select2-css', 
-                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', 
-                [], 
-                '4.1.0'
-            );
-            wp_enqueue_script(
-                'select2-js', 
-                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', 
-                ['jquery'], 
-                '4.1.0', 
-                true
-            );
-            
-            // Update the dependency array for your admin-scripts below
-            $js_dependencies = ['jquery', 'select2-js'];
-        } else {
-            $js_dependencies = ['jquery'];
-        }
-        
-
-        // 2. Enqueue Your CSS
+        // Enqueue Your CSS
         wp_enqueue_style( 
             'dedu-admin-style', 
             \DEDU_URL . 'assets/css/admin-style.css', 
@@ -187,17 +178,6 @@ class Menu {
             '1.0.0' 
         );
 
-        // 3. Enqueue Your JS
-        wp_enqueue_script(
-            'dedu-admin-scripts', 
-            \DEDU_URL . 'assets/js/admin-scripts.js', 
-            $js_dependencies, // Dynamic dependencies based on the page
-            '1.1.4', 
-            true 
-        );
+        
     }
-
-    /**
-     * Helper to keep the main enqueue method clean
-     */
 }

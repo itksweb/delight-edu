@@ -8,15 +8,15 @@ const addSectionBtn = document.querySelector("#add-section-btn");
 const removeSectionBtn = document.querySelector("remove-section");
 
 const renderAddNewScreen = () => {
+  formTitle.textContent = `Add A New ${itemType}`;
+  submitBtn.textContent = `Create ${itemType}`;
   className.value = "";
   numericName.value = "";
   sectionsContainer.replaceChildren();
 };
 
 const removeSection = (e) => {
-  if (e.target.classList.contains("remove-section")) {
-    e.target.parentElement.remove();
-  }
+  if (e.target.closest(".remove-section")) e.target.parentElement.remove();
 };
 const addSection = (name = "", cat = "") => {
   const clone = sectionTemplate.content.cloneNode(true);
@@ -29,14 +29,14 @@ addSectionBtn.addEventListener("click", addSection);
 sectionsContainer.addEventListener("click", removeSection);
 
 const renderEditScreen = (data) => {
-  const {name, num, sections, id} = data;
+  const { name, num, sections, id } = data;
+  formTitle.textContent = `Edit ${itemType}: ${name}`;
+  submitBtn.textContent = `Update ${name}`;
   className.value = name;
   numericName.value = num;
   sectionsContainer.replaceChildren();
   const sectionList = sections.split(",").map((txt) => txt.trim());
   if (sectionList.length) {
-    sectionList.forEach((txt) => addSection(txt))
+    sectionList.forEach((txt) => addSection(txt));
   }
-  
 };
-
