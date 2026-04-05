@@ -83,19 +83,19 @@ $tspan = "6"
         </div>
         <?php include("{$part}/table-bottom.php") ?>   
     </div>
-    <div class="dedu-card hide-me" id="dedu-form-view"  >
+    <div class="hide-me" id="dedu-form-view"  >
         <?php include("{$part}/tab-form-header.php") ?>
-        <form action="<?php echo admin_url('admin-post.php'); ?>" method="post" enctype="multipart/form-data">
+        <form id="staff-form" action="<?php echo admin_url('admin-post.php'); ?>" method="post" enctype="multipart/form-data">
             <input type="hidden" name="action" value="dedu_save_staff">
             <input type="hidden" name="staff_db_id" id="staff_db_id" value="0">
             <input type="hidden" name="wp_user_id" id="wp_user_id" value="">
             <input type="hidden" name="existing_photo_url" id="existing_photo_url" value="">
             <?php wp_nonce_field('dedu_staff_nonce'); ?>
-
-            <fieldset class = "fieldset">
-                <legend class = "legend">Personal Details</legend>
-                <div class="fields-row">
-                    <div class="dedu-upload-container unit" id="drop-zone">
+            
+            <div class="dedu-card">
+                <fieldset class = "fields-group">
+                    <legend class = "dedu-card-title">Personal Details</legend>
+                    <div class="unit dedu-upload-container" id="drop-zone">
                         <label for="staff_photo" class="dedu-upload-label">
                             <div class="upload-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -112,9 +112,6 @@ $tspan = "6"
                             <button type="button" class="remove-img">&times;</button>
                         </div>
                     </div>
-                </div>
-                
-                <div class = "fields-row">
                     <div class = "unit">
                         <label>First Name*</label>
                         <input type="text" name="first_name" class="large-text" required>
@@ -127,8 +124,6 @@ $tspan = "6"
                         <label>Last Name*</label>
                         <input type="text" name="last_name" class="large-text" required>
                     </div>
-                </div>
-                <div class = "fields-row">
                     <div class = "unit">
                         <label>Gender</label>
                         <select name="gender" class="large-text">
@@ -148,31 +143,14 @@ $tspan = "6"
                     <div class = "unit">
                         <label>Date of Birth</label>
                         <input type="date" name="date_of_birth" class="large-text">
-                    </div>
-                </div>
-            </fieldset>
+                    </div>                 
+                </fieldset>
+            </div>
 
-            <fieldset class = "fieldset">
-                <legend class = "legend">Account</legend>
-                <div class = "fields-row">
-                    <div class = "unit">
-                        <label>Email (Login Username)*</label>
-                        <input type="email" name="email" class="large-text" required>
-                    </div>
-                    <div class = "unit">
-                        <label>Password*</label>
-                        <input type="password" name="password" class="large-text" required>
-                    </div>
-                    <div class = "unit">
-                        <label>Phone Number</label>
-                        <input type="text" name="phone" class="large-text">
-                    </div>
-                </div>
-            </fieldset>
-
-            <fieldset class = "fieldset">
-                <legend class = "legend">Employment</legend>
-                <div class = "fields-row">
+            
+            <div class="dedu-card">
+                <fieldset class = "fields-group">
+                    <legend class = "dedu-card-title">Employment</legend>
                     <div class = "unit">
                         <label>Staff Role</label>
                         <select name="role_id" class="large-text">
@@ -182,7 +160,7 @@ $tspan = "6"
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="unit">
+                    <div class= "unit">
                         <label>Working Hours</label>
                         <select name="working_hours" class="large-text">
                             <?php foreach ($form_meta['working_hours'] as $k => $v) : ?>
@@ -190,9 +168,6 @@ $tspan = "6"
                             <?php endforeach; ?>
                         </select>
                     </div>
-                </div>
-                
-                <div class = "fields-row">
                     <div class = "unit">
                         <label>Joining Date</label>
                         <input type="date" name="joining_date" class="large-text" value="<?php echo date('Y-m-d'); ?>">
@@ -205,46 +180,69 @@ $tspan = "6"
                         <label>Salary Amount</label>
                         <input type="number" step="0.01" name="salary_amount" class="large-text" value="0.00">
                     </div>
-                </div>
-            </fieldset>
-
-            <fieldset class = "fieldset" style="background: #f9f9f9;">
-                <legend class = "legend">Academic Bridge</legend>
-                <p>
-                    <label>
-                        <input type="checkbox" name="is_teacher" id="is_teacher_toggle" value="1"> 
-                        <strong>Is Teaching Staff?</strong>
-                    </label>
-                </p>
-                <div id="academic_fields" style="display:none;">
-                    <p>
-                        <label>Assigned Class (Form Master)</label>
-                        <select name="class_id" class="large-text">
-                            <option value="">-- Not a Class Master --</option>
+                    <div class = "unit">
+                        <label>
+                            <input type="checkbox" name="is_teacher" id="is_teacher_toggle" value="1"> 
+                            <strong>Is Teaching Staff?</strong>
+                        </label>
+                    </div>
+                    <div class = "unit academic_field class-field" style="display: none;" >
+                        <label>Assigned Class</label>
+                        <select name="class_id" class="large-text" id="class-field">
+                            <option value="">-- No Class Assigned --</option>
                             <?php foreach ($classes as $c) : ?>
                                 <option value="<?php echo $c->id; ?>"><?php echo esc_html($c->class_name); ?></option>
                             <?php endforeach; ?>
                         </select>
-                    </p>
-                    <p class="description">Note: Checking this allows this staff to be assigned to subjects in the Curriculum module.</p>
-                </div>
-            </fieldset>
+                    </div>
+                    <div class = "unit academic_field" style="display: none;">
+                        <label>Assigned Section</label>
+                        <select name="section_id" class="large-text" id="sections-field">
+                            <option value="" disabled selected>-- select a class first --</option>
+                        </select>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="dedu-card">
+                <fieldset class = "fields-group">
+                    <legend class = "dedu-card-title">Account</legend>
+                    <div class = "unit">
+                        <label>Email (Login Username)*</label>
+                        <input type="email" name="email" class="large-text" required>
+                    </div>
+                    <div class = "unit">
+                        <label>Password*</label>
+                        <input type="password" name="password" class="large-text" required>
+                    </div>
+                    <div class = "unit">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone" class="large-text">
+                    </div>
+                </fieldset>
+            </div>
 
-            <fieldset class = "fieldset">
-                <legend style="padding: 0 10px; font-weight: bold; color: #2271b1;">Staff Permissions</legend>
-                <p class="description">Selecting a role above will auto-fill these, but you can add/remove specific permissions for this individual.</p>
-                
-                <div class="dedu-permissions-grid">
+            <div class="dedu-card">
+                <fieldset class = "fields-group">
+                    <legend class="dedu-card-title"><span class="dashicons dashicons-shield"></span>Staff Permissions</legend>
+                    <p class="description">Selecting a role above will auto-fill these, but you can add/remove specific permissions for this individual.</p>
                     <?php foreach ($permission_groups as $group_name => $caps) : ?>
                         <div class="dedu-permission-card">
-                            <h4 class="dedu-group-label">
-                                <?php echo esc_html($group_name); ?>
-                            </h4>
+                            <div class="cap-list-head">
+                                <h4 class="dedu-group-label">
+                                    <?php echo esc_html($group_name); ?>
+                                    <small><span class="dashicons dashicons-plus"></span></small>
+                                </h4>
+                                <label class="dedu-checkbox-label">
+                                    <span class="dedu-checkbox-text">Select All</span>
+                                    <input type="checkbox" name="<?php echo esc_html($group_name); ?>" class="check-all-caps" >
+                                </label>
+                            </div>
+                            
                             <div class="dedu-cap-list">
                                 <?php foreach ($caps as $cap_slug => $cap_label) : ?>
                                     <label class="dedu-checkbox-label">
                                         <input type="checkbox" name="staff_permissions[]"
-                                            class="staff-cap-checkbox" 
+                                            class="cap-checkbox" 
                                             value="<?php echo esc_attr($cap_slug); ?>" >
                                             <span class="dedu-checkbox-text"><?php echo esc_html($cap_label); ?></span>
                                     </label>
@@ -253,17 +251,13 @@ $tspan = "6"
                             
                         </div>
                     <?php endforeach; ?>
-                </div>
-            </fieldset>
+                </fieldset>
+            </div>
+            
             <div class="dedu-form-actions">
-                <button type="submit" class="dedu-btn dedu-btn-primary">
-                    
+                <button type="submit" class="dedu-btn dedu-btn-primary">  
                 </button>
             </div>
-
-            <!-- <p class="submit">
-                <input type="submit" class="button button-primary button-large" value="Save Staff Member" style="width:100%;">
-            </p> -->
         </form>                  
     </div>
 </div>
@@ -278,6 +272,7 @@ $tspan = "6"
     background: #f9fafb;
     position: relative;
     cursor: pointer;
+    grid-row: span 3;
     }
 
     .dedu-upload-container:hover, .dedu-upload-container.drag-over {
@@ -325,23 +320,15 @@ $tspan = "6"
 </style>
 
 <script>
+    const sections = <?php echo json_encode($sections_by_class); ?>;
+    const classes = <?php echo json_encode($classes); ?>;
     jQuery(document).ready(function($) {
         $('#is_teacher_toggle').on('change', function() {
-            if ($(this).is(':checked')) { $('#academic_fields').slideDown(); }
-            else { $('#academic_fields').slideUp(); }
+            if ($(this).is(':checked')) { $('.academic_field').slideDown(); }
+            else { 
+                $('.academic_field').slideUp();
+             }
         });
-
-        /**
-         * IMPORTANT: Disabled checkboxes are NOT sent in $_POST.
-         * We need to enable them just for a split second before the form submits
-         * so the server receives the FULL list of permissions.
-         */
-        
-        $('form').on('submit', function() {
-            $('.staff-cap-checkbox').prop('disabled', false);
-        });
-
-
     });
     
 </script>

@@ -50,7 +50,7 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
                                         </a>
                                 </td>
                                 <td>
-                                    <span class="count-pill <?php echo ($item->subject_count > 0) ? 'has-subjects' : 'no-subjects'; ?>">
+                                    <span class="dedu-badge <?php echo ($item->subject_count > 0) ? '' : 'empty'; ?>">
                                         <?php echo esc_html($item->subject_count); ?> Subjects
                                     </span>
                                 </td>
@@ -110,38 +110,38 @@ $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
         subjects: <?php echo json_encode($master_subjects); ?>,
         teachers: <?php echo json_encode($teachers_list); ?>
     };
-     jQuery(document).ready(function($) {
-        const $tbody = $('#subject-rows');
-        const $submitBtn = $('.button-primary');
+    //  jQuery(document).ready(function($) {
+    //     const $tbody = $('#subject-rows');
+    //     const $submitBtn = $('.button-primary');
 
-        function validateCurriculum() {
-            let selectedSubjects = [];
-            let hasDuplicate = false;
+    //     function validateCurriculum() {
+    //         let selectedSubjects = [];
+    //         let hasDuplicate = false;
 
-            $tbody.find('select[name*="[id]"]').each(function() {
-                let val = $(this).val();
-                if (val) {
-                    if (selectedSubjects.includes(val)) {
-                        $(this).css('border', '2px solid #d63638');
-                        hasDuplicate = true;
-                    } else {
-                        $(this).css('border', '');
-                        selectedSubjects.push(val);
-                    }
-                }
-            });
+    //         $tbody.find('select[name*="[id]"]').each(function() {
+    //             let val = $(this).val();
+    //             if (val) {
+    //                 if (selectedSubjects.includes(val)) {
+    //                     $(this).css('border', '2px solid #d63638');
+    //                     hasDuplicate = true;
+    //                 } else {
+    //                     $(this).css('border', '');
+    //                     selectedSubjects.push(val);
+    //                 }
+    //             }
+    //         });
 
-            if (hasDuplicate) {
-                $submitBtn.prop('disabled', true).attr('title', 'Each subject can only be assigned once per class.');
-            } else {
-                $submitBtn.prop('disabled', false).removeAttr('title');
-            }
-        }
-        $tbody.on('change', 'select[name*="[id]"]', function() {
-            validateCurriculum();
-        });
+    //         if (hasDuplicate) {
+    //             $submitBtn.prop('disabled', true).attr('title', 'Each subject can only be assigned once per class.');
+    //         } else {
+    //             $submitBtn.prop('disabled', false).removeAttr('title');
+    //         }
+    //     }
+    //     $tbody.on('change', 'select[name*="[id]"]', function() {
+    //         validateCurriculum();
+    //     });
         
-    });
+    // });
 </script>
 
 <style>

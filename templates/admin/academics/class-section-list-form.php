@@ -105,7 +105,7 @@ $tspan = "5"
                         <input type="text" name="sections[]" class="inp section-name" width="45%" placeholder="Section Name (e.g. A)" required> 
                         <input type="text" name="section-category" class="inp section-category" id="section-category" width="45%" placeholder="e.g. Law, Sciences, etc."> 
                         <button type="button" width="10%" class="remove-section">×</button> 
-                    </div>;
+                    </div>
                 </template>
             </div>
             

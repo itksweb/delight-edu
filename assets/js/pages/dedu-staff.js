@@ -18,7 +18,7 @@ const dob = document.querySelector('input[name="date_of_birth"]');
 const roleSelect = document.querySelector('select[name="role_id"]');
 const classId = document.querySelector('select[name="class_id"]');
 const password = document.querySelector('input[type="password"]');
-const academicFields = document.getElementById("academic_fields");
+const academicFields = document.querySelectorAll("academic_field");
 
 const updatePhoto = (src) => {
   previewImg.src = src ? src : "";
@@ -26,11 +26,6 @@ const updatePhoto = (src) => {
 };
 
 const ROLE_PERMISSIONS = deduStaffData.rolePermissions;
-
-const todaysDate = () => {
-  const date = new Date();
-  return date.toISOString().split("T")[0];
-};
 
 function syncPermissions(roleId, userOverrides = []) {
   const roleCaps = ROLE_PERMISSIONS[roleId] || [];
@@ -80,18 +75,21 @@ const renderAddNewScreen = () => {
   roleSelect.value = "";
   classId.value = "";
   isTeacherToggle.checked = false;
-  academicFields.style.display = isTeacherToggle.checked ? "block" : "none";
+  academicFields.forEach((el) => (el.style.display = "none"));
 
-  // Trigger the toggle visual logic manually
+  updateUrlActionId();
+  updateHiddenInput();
+  showFormView();
 };
 
-const renderEditScreen = async (data) => {
+const renderEditScreen = async (e) => {
+  const ID = target(e, ".dedu-edit-icon").dataset.id;
   password.removeAttribute("required");
 
   // Prepare AJAX request
   const formData = new FormData();
   formData.append("action", "get_staff_details");
-  formData.append("id", data.id);
+  formData.append("id", ID);
   formData.append("nonce", deduStaffData.nonce);
 
   try {
@@ -125,11 +123,16 @@ const renderEditScreen = async (data) => {
       isTeacherToggle.checked = data.is_teacher == 1;
       classId.value = data.class_id || "";
       roleSelect.value = data.role_id;
-      academicFields.style.display = isTeacherToggle.checked ? "block" : "none";
+      isTeacherToggle.checked
+        ? academicFields.forEach((el) => (el.style.display = ""))
+        : academicFields.forEach((el) => (el.style.display = "none"));
       submitBtn.textContent = "Update Staff";
 
       // Manually call the permission sync function
       syncPermissions(data.role_id, perms);
+      updateUrlActionId(data.id);
+      updateHiddenInput(data.id);
+      showFormView();
     } else {
       alert("Error: " + result.data);
     }
@@ -205,5 +208,72 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     fileInput.value = ""; // Clear input
     previewContainer.classList.add("hidden");
+  });
+});
+
+const staffForm = document.querySelector("#staff-form");
+const classField = document.querySelector("#class-field");
+const sectionsField = document.querySelector("#sections-field");
+
+staffForm?.addEventListener("change", (e) => {
+  const isClass = classField.checkVisibility() && e.target === classField;
+  if (isClass) {
+    const key = classField.value;
+    let options = `<option value = "" disabled selected>-- select a class first --</option>`;
+    if (key) {
+      const hasSections = sections[key] && sections[key].length;
+      const class_name = classes.find((cls) => cls.id === key).class_name;
+      if (hasSections) {
+        options = `<option value = "">All Sections</option>`;
+        options += sections[key]
+          .map(
+            (sec) => `<option value = ${sec.id}>${sec.section_name}</option>`
+          )
+          .join("");
+      } else {
+        options = `<option value = "" selected disabled>-- no sections for ${class_name} --</option>`;
+      }
+    }
+    sectionsField.innerHTML = options;
+  } else if (e.target === isTeacherToggle && !isTeacherToggle.checked) {
+    classField.value = "";
+    sectionsField.innerHTML = `<option value = "" disabled selected>-- select a class first --</option>`;
+  }
+});
+
+const allPerms = document.querySelectorAll(".dedu-permission-card");
+allPerms?.forEach((cont) => {
+  const permBody = cont.querySelector(".dedu-cap-list");
+  const permHead = cont.querySelector(".cap-list-head");
+  const showHideToggle = cont.querySelector(".dedu-group-label");
+  const checkAll = permHead.querySelector(".dedu-checkbox-label");
+  const showHide = (action) => {
+    permBody.style.display = action;
+    checkAll.style.display = action;
+    let togg = showHideToggle.querySelector(".dashicons");
+    if (action === "none") {
+      togg.classList.remove("dashicons-minus");
+      togg.classList.add("dashicons-plus");
+    } else {
+       togg.classList.remove("dashicons-plus");
+       togg.classList.add("dashicons-minus");
+    }
+  }
+  showHide("none")
+  
+  
+  showHideToggle.addEventListener("click", (e) => {
+    showHide(permBody.checkVisibility() ? "none" : "flex");    
+  });
+  // --- 1. SELECT ALL CHECKBOXES ---
+  checkUncheckAll(".check-all-caps", ".cap-checkbox", cont);
+  // --- 2. INDIVIDUAL CHECKBOX LOGIC ---
+  checkUncheckSingle(cont, ".check-all-caps", "cap-checkbox");
+});
+
+staffForm?.addEventListener("submit", () => {
+  const checkboxes = staffForm.querySelectorAll(".staff-cap-checkbox");
+  checkboxes.forEach((checkbox) => {
+    checkbox.disabled = false;
   });
 });

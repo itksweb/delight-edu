@@ -52,7 +52,8 @@ function addNewRow(id, data = null) {
   subjectRows.appendChild(theRow);
 }
 
-const renderEditScreen = (data) => {
+const renderEditScreen = (e) => {
+  const data = target(e, ".dedu-edit-icon").dataset;
   const { id } = data;
   addRowBtn.dataset.id = id;
   document.querySelector(`input[name="class_id"]`).value = id;
@@ -64,9 +65,60 @@ const renderEditScreen = (data) => {
       addNewRow(id, item);
     });
   }
+  updateUrlActionId(id);
+  showFormView();
 };
 
 document.addEventListener("click", (e) => {
   if (target(e, ".remove-row")) target(e, "tr").remove();
   else if (target(e, "#add-row")) addNewRow(e.target.dataset.id);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tbody = document.querySelector("#subject-rows");
+  const submitBtn = document.querySelector(".button-primary");
+
+  const validateCurriculum = () => {
+    let selectedSubjects = [];
+    let hasDuplicate = false;
+
+    // 1. Find all select menus whose name contains "[id]"
+    const selects = tbody.querySelectorAll('select[name*="[id]"]');
+
+    selects.forEach((select) => {
+      const val = select.value;
+
+      if (val) {
+        if (selectedSubjects.includes(val)) {
+          // 2. Set red border for duplicates
+          select.style.border = "2px solid #d63638";
+          hasDuplicate = true;
+        } else {
+          // 3. Clear border and track the value
+          select.style.border = "";
+          selectedSubjects.push(val);
+        }
+      }
+    });
+
+    // 4. Update submit button state
+    if (submitBtn) {
+      submitBtn.disabled = hasDuplicate;
+      if (hasDuplicate) {
+        submitBtn.setAttribute(
+          "title",
+          "Each subject can only be assigned once per class."
+        );
+      } else {
+        submitBtn.removeAttribute("title");
+      }
+    }
+  }
+
+  // 5. Event Delegation: Listen for changes on the tbody
+  tbody?.addEventListener("change", (e) => {
+    if (e.target.matches('select[name*="[id]"]')) {
+      validateCurriculum();
+    }
+  });
 });

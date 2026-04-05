@@ -13,11 +13,12 @@ const renderAddNewScreen = () => {
   className.value = "";
   numericName.value = "";
   sectionsContainer.replaceChildren();
+  updateUrlActionId();
+  updateHiddenInput();
+  showFormView();
 };
 
-const removeSection = (e) => {
-  if (e.target.closest(".remove-section")) e.target.parentElement.remove();
-};
+
 const addSection = (name = "", cat = "") => {
   const clone = sectionTemplate.content.cloneNode(true);
   clone.querySelector(".section-name").value = name;
@@ -25,18 +26,21 @@ const addSection = (name = "", cat = "") => {
   sectionsContainer.appendChild(clone);
 };
 
-addSectionBtn.addEventListener("click", addSection);
-sectionsContainer.addEventListener("click", removeSection);
+document.addEventListener("click", (e) => {
+  if (target(e, ".remove-section")) target(e, ".section-row").remove();
+  else if (target(e, "#add-section-btn")) addSection();
+})
 
-const renderEditScreen = (data) => {
-  const { name, num, sections, id } = data;
+const renderEditScreen = (e) => {
+  const { name, num, sections, id } = target(e, ".dedu-edit-icon").dataset;
   formTitle.textContent = `Edit ${itemType}: ${name}`;
   submitBtn.textContent = `Update ${name}`;
   className.value = name;
   numericName.value = num;
   sectionsContainer.replaceChildren();
   const sectionList = sections.split(",").map((txt) => txt.trim());
-  if (sectionList.length) {
-    sectionList.forEach((txt) => addSection(txt));
-  }
+  if (sectionList.length) sectionList.forEach((txt) => addSection(txt));
+  updateUrlActionId(id);
+  updateHiddenInput(id);
+  showFormView();
 };

@@ -56,6 +56,12 @@ class StaffController {
         global $wpdb;
         $table_classes = $wpdb->prefix . 'dedu_classes';
         $classes = $wpdb->get_results("SELECT id, class_name FROM $table_classes ORDER BY numeric_name ASC");
+        $all_sections = $wpdb->get_results("SELECT id, section_name, class_id FROM {$wpdb->prefix}dedu_sections");
+        // Group sections by class_id for fast JS lookup
+        $sections_by_class = [];
+        foreach ($all_sections as $sec) {
+            $sections_by_class[$sec->class_id][] = $sec;
+        }
 
         // 4. Define metadata for the form (Gender/Status/Marital Status)
         // This keeps the Template clean

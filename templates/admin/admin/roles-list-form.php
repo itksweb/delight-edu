@@ -36,7 +36,7 @@ $tspan = "4"
                                 </td>
                                 <td class="text-heading"><?php echo esc_html( $role->role_name ); ?></td>
                                 <td>
-                                    <span class="dedu-badge-count">
+                                    <span class="dedu-badge <?php echo ($cap_count > 0) ? '' : 'empty'; ?>">
                                         <?php echo $cap_count; ?> Permissions
                                     </span>
                                 </td>
@@ -109,11 +109,20 @@ $tspan = "4"
                 <div class="dedu-permissions-grid"> 
                     <?php foreach ( $groups as $group_name => $capabilities ) : ?>
                         <div class="dedu-permission-card">
-                            <h4 class="dedu-group-label"><?php echo esc_html( $group_name ); ?></h4>
+                            <div class="cap-list-head">
+                                <h4 class="dedu-group-label">
+                                    <?php echo esc_html($group_name); ?>
+                                    <small><span class="dashicons dashicons-plus"></span></small>
+                                </h4>
+                                <label class="dedu-checkbox-label">
+                                    <span class="dedu-checkbox-text">Select All</span>
+                                    <input type="checkbox" name="<?php echo esc_html($group_name); ?>" class="check-all-caps" >
+                                </label>
+                            </div>
                             <div class="dedu-cap-list">
                                 <?php foreach ( $capabilities as $cap_slug => $cap_label ) : ?>
                                     <label class="dedu-checkbox-label">
-                                        <input type="checkbox" name="capabilities[]" value="<?php echo esc_attr( $cap_slug ); ?>"
+                                        <input type="checkbox" class="cap-checkbox" name="capabilities[]" value="<?php echo esc_attr( $cap_slug ); ?>"
                                             <?php checked( in_array( $cap_slug, $current_caps ) ); ?>>
                                         <span class="dedu-checkbox-text"><?php echo esc_html( $cap_label ); ?></span>
                                     </label>
