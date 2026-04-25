@@ -23,9 +23,8 @@ $tspan = "6"
                 <thead>
                     <tr>
                         <th class="col-cb"><input type="checkbox" id="dedu-select-all"></th>
-                        <th style="width:120px;">ID Number</th>
+                        <th style="width:120px;">Staff ID</th>
                         <th>Name</th>
-                        <th>Role & Position</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -34,7 +33,23 @@ $tspan = "6"
                     <?php if ( empty( $staff_members ) ) : ?>
                         <?php include("{$part}/no-data.php") ?>
                     <?php else : ?>
-                        <?php foreach ( $staff_members as $s ) : ?>
+                        <?php foreach ( $staff_members as $s ) :
+                            // 1. Get the real photo URL if an ID exists
+                            $photo_url = '';
+                            if ( ! empty( $s->profile_picture_id ) ) {
+                                $photo_url = wp_get_attachment_image_url( $s->profile_picture_id, 'thumbnail' );
+                            }
+
+                            // 2. Fallback to your plugin's default image if no photo is found
+                            if ( ! $photo_url ) {
+                                // Option A: Use a local file in your plugin
+                                $photo_url = \DEDU_URL . "assets/images/profile.jpg"; 
+                                
+                                // Option B: SaaS-style dynamic avatar (No image file needed!)
+                                // $photo_url = "https://ui-avatars.com/api/?name=" . urlencode($s->first_name . ' ' . $s->last_name) . "&background=random";
+                            }    
+                        ?>
+                            
                             <tr class="is-row">
                                 <td class="col-cb">
                                     <input type="checkbox" class="dedu-selection-checkbox" value="<?php echo $s->id; ?>">
@@ -43,12 +58,16 @@ $tspan = "6"
                                     <strong><?php echo esc_html($s->staff_id_number); ?></strong>
                                 </td>
                                 <td>
-                                    <span class="text-heading"><?php echo esc_html("{$s->first_name} {$s->last_name}"); ?></span><br>
-                                    <small><?php echo esc_html($s->email); ?></small>
-                                </td>
-                                <td>
-                                    <?php echo esc_html($s->role_name); ?><br>
-                                    <small><em><?php echo esc_html($s->position); ?></em></small>
+                                    <div class="prof">
+                                        <img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( "{$s->first_name}_{$s->last_name}" ); ?>"  >
+                                        <p>
+                                            <span class="text-heading">
+                                                <?php echo esc_html("{$s->first_name} {$s->last_name}"); ?>
+                                            </span><br>
+                                            <small><?php echo esc_html($s->email); ?></small>
+                                        </p>
+                                    </div>
+                                    
                                 </td>
                                 <td>
                                     <span class="status-badge status-<?php echo $s->status; ?>">
@@ -95,23 +114,7 @@ $tspan = "6"
             <div class="dedu-card">
                 <fieldset class = "fields-group">
                     <legend class = "dedu-card-title">Personal Details</legend>
-                    <div class="unit dedu-upload-container" id="drop-zone">
-                        <label for="staff_photo" class="dedu-upload-label">
-                            <div class="upload-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            </div>
-                            <div class="upload-text">
-                                <strong>Click to upload</strong> or drag and drop
-                                <span>PNG, JPG or GIF (max. 2MB)</span>
-                            </div>
-                            <input type="file" name="staff_photo" id="staff_photo" accept="image/*" hidden>
-                        </label>
-                        
-                        <div id="image-preview" class="image-preview hidden">
-                            <img src="" alt="Preview">
-                            <button type="button" class="remove-img">&times;</button>
-                        </div>
-                    </div>
+                    <?php include("{$part}/picture-upload.php") ?>
                     <div class = "unit">
                         <label>First Name*</label>
                         <input type="text" name="first_name" class="large-text" required>
@@ -263,59 +266,18 @@ $tspan = "6"
 </div>
 
 <style>
-    .dedu-upload-container {
-    border: 2px dashed #d1d5db;
-    border-radius: 12px;
-    padding: 40px;
-    text-align: center;
-    transition: all 0.3s ease;
-    background: #f9fafb;
-    position: relative;
-    cursor: pointer;
-    grid-row: span 3;
-    }
-
-    .dedu-upload-container:hover, .dedu-upload-container.drag-over {
-        border-color: #4f46e5; /* Modern Indigo */
-        background: #f5f3ff;
-    }
-
-    .upload-icon { color: #9ca3af; margin-bottom: 12px; }
-    .upload-text { color: #4b5563; font-size: 14px; }
-    .upload-text strong { color: #4f46e5; }
-    .upload-text span { display: block; color: #9ca3af; margin-top: 4px; }
-
-    /* Preview Styling */
-    .image-preview {
-        position: absolute;
-        inset: 0;
-        background: white;
-        border-radius: 12px;
+    .prof {
         display: flex;
         align-items: center;
-        justify-content: center;
-        overflow: hidden;
+        justify-content: flex-start;
+        gap: 10px;
     }
-
-    .image-preview img {
-        max-height: 100%;
-        width: auto;
-        object-fit: contain;
-    }
-
-    .hidden { display: none !important; }
-
-    .remove-img {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #ef4444;
-        color: white;
-        border: none;
+    .prof img {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        cursor: pointer;
+        background-color: #ef4444;
+        object-fit: cover;
     }
 </style>
 
@@ -330,5 +292,4 @@ $tspan = "6"
              }
         });
     });
-    
 </script>

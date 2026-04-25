@@ -69,6 +69,17 @@ class StaffRole {
         return false !== $result;
     }
 
+    public function get_roles_with_caps() {
+        global $wpdb;
+        // Fetch role-to-capability mapping
+        $role_caps_raw = $wpdb->get_results("SELECT role_id, capability FROM {$wpdb->prefix}dedu_role_capabilities");
+        $role_mapping = [];
+        foreach ($role_caps_raw as $row) {
+            $role_mapping[$row->role_id][] = $row->capability;
+        }
+        return $role_mapping;
+    }
+
     
     public function get_capabilities( $role_id ) {
         global $wpdb;
@@ -83,7 +94,6 @@ class StaffRole {
         global $wpdb;
         $query = "
             SELECT r.*, 
-                COUNT(c.id) as cap_count,
                 GROUP_CONCAT(c.capability) as capabilities 
             FROM {$this->table_roles} r
             LEFT JOIN {$this->table_caps} c 
@@ -91,7 +101,16 @@ class StaffRole {
             GROUP BY r.id
             ORDER BY r.role_name ASC
         ";
-        return $wpdb->get_results( $query );
+        $results = $wpdb->get_results( $query );
+
+        if ($results) {
+            foreach ($results as $role) {
+                $role->capabilities = !empty($role->capabilities) 
+                    ? explode(',', $role->capabilities) 
+                    : [];
+            }
+        }
+        return $results;
     }
 
     

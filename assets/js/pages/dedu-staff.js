@@ -19,43 +19,60 @@ const roleSelect = document.querySelector('select[name="role_id"]');
 const classId = document.querySelector('select[name="class_id"]');
 const password = document.querySelector('input[type="password"]');
 const academicFields = document.querySelectorAll("academic_field");
+const allPerms = document.querySelectorAll(".dedu-permission-card");
+const dropZone = document.getElementById("drop-zone");
 
 const updatePhoto = (src) => {
   previewImg.src = src ? src : "";
-  if (src) previewContainer.classList.remove("hidden");
+  if (src) {
+    previewContainer.classList.remove("hidden");
+    dropZone.classList.remove("bordered");
+    dropZone.querySelector("p").classList.add("hidden");
+    dropZone.querySelector(".upload-icon").classList.add("hidden");
+  } else {
+    previewContainer.classList.add("hidden");
+    dropZone.classList.add("bordered");
+    dropZone.querySelector("p").classList.remove("hidden");
+    dropZone.querySelector(".upload-icon").classList.remove("hidden");
+  }
 };
+
 
 const ROLE_PERMISSIONS = deduStaffData.rolePermissions;
 
-function syncPermissions(roleId, userOverrides = []) {
-  const roleCaps = ROLE_PERMISSIONS[roleId] || [];
-  const allCheckboxes = document.querySelectorAll(".staff-cap-checkbox");
-  let ite = [];
+function syncPermissions(roleId, permissions = []) {
+  const allCheckboxes = document.querySelectorAll(".cap-checkbox");
+  // Uncheck all checkboxes
   allCheckboxes.forEach((box) => {
-    // Reset state
     box.checked = false;
     box.disabled = false;
     box.closest("label").style.opacity = "1";
+  });
 
+  const roleCaps = roleId ? ROLE_PERMISSIONS[roleId] : [];
+  allCheckboxes.forEach((box) => {
     // 1. If it's in the ROLE, check and disable it
-    if (roleCaps.includes(box.value) || userOverrides.includes(box.value)) {
-      box.checked = true;
-    }
-
-    // 2. If it's in the USER overrides, check it (if not already handled by role)
     if (roleCaps.includes(box.value)) {
-      ite = [...ite, box.value];
+      box.checked = true;
       box.disabled = true;
       box.closest("label").style.opacity = "0.7";
     }
+
+    // 2. If it's in the staff permissions, check it (if not already handled by role)
+    if (permissions.includes(box.value) && !roleCaps.includes(box.value)) {
+      box.checked = true;
+    }
   });
-  // console.log("catch ya: ", ite);
 }
 
 // Add event listener for manual Role change
-document
-  .querySelector('select[name="role_id"]')
-  .addEventListener("change", (e) => syncPermissions(e.target.value));
+roleSelect.addEventListener("change", (e) => {
+  syncPermissions(e.target.value);
+  allPerms?.forEach((cont) => {
+    const hasCheck = cont.querySelector(".cap-checkbox:checked");
+    displayPermissionsGroup(hasCheck ? "flex" : "none", cont);
+  });
+});
 
 const renderAddNewScreen = () => {
   formTitle.textContent = `Add A New ${itemType}`;
@@ -80,6 +97,7 @@ const renderAddNewScreen = () => {
   updateUrlActionId();
   updateHiddenInput();
   showFormView();
+  allPerms?.forEach((cont) => displayPermissionsGroup("none", cont));
 };
 
 const renderEditScreen = async (e) => {
@@ -133,6 +151,10 @@ const renderEditScreen = async (e) => {
       updateUrlActionId(data.id);
       updateHiddenInput(data.id);
       showFormView();
+      allPerms?.forEach((cont) => {
+        const hasCheck = cont.querySelector(".cap-checkbox:checked");
+        displayPermissionsGroup(hasCheck ? "flex" : "none", cont);
+      });
     } else {
       alert("Error: " + result.data);
     }
@@ -143,7 +165,6 @@ const renderEditScreen = async (e) => {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
-  const dropZone = document.getElementById("drop-zone");
   const fileInput = document.getElementById("staff_photo");
 
   // Handle File Selection
@@ -162,10 +183,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   dropZone.addEventListener("dragover", () =>
-    dropZone.classList.add("drag-over")
+    dropZone.classList.add("drag-over"),
   );
   dropZone.addEventListener("dragleave", () =>
-    dropZone.classList.remove("drag-over")
+    dropZone.classList.remove("drag-over"),
   );
 
   dropZone.addEventListener("drop", (e) => {
@@ -188,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fileInput.value = ""; // Reset the input
       return;
     }
-
+    
     // 2. Now it's safe to check the type
     if (file && file.type && file.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -207,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
   removeBtn.addEventListener("click", (e) => {
     e.preventDefault();
     fileInput.value = ""; // Clear input
-    previewContainer.classList.add("hidden");
+    updatePhoto("")
   });
 });
 
@@ -227,7 +248,7 @@ staffForm?.addEventListener("change", (e) => {
         options = `<option value = "">All Sections</option>`;
         options += sections[key]
           .map(
-            (sec) => `<option value = ${sec.id}>${sec.section_name}</option>`
+            (sec) => `<option value = ${sec.id}>${sec.section_name}</option>`,
           )
           .join("");
       } else {
@@ -238,32 +259,16 @@ staffForm?.addEventListener("change", (e) => {
   } else if (e.target === isTeacherToggle && !isTeacherToggle.checked) {
     classField.value = "";
     sectionsField.innerHTML = `<option value = "" disabled selected>-- select a class first --</option>`;
+  } else if (e.target === document.querySelector('select[name="role_id"]')) {
   }
 });
 
-const allPerms = document.querySelectorAll(".dedu-permission-card");
 allPerms?.forEach((cont) => {
   const permBody = cont.querySelector(".dedu-cap-list");
-  const permHead = cont.querySelector(".cap-list-head");
   const showHideToggle = cont.querySelector(".dedu-group-label");
-  const checkAll = permHead.querySelector(".dedu-checkbox-label");
-  const showHide = (action) => {
-    permBody.style.display = action;
-    checkAll.style.display = action;
-    let togg = showHideToggle.querySelector(".dashicons");
-    if (action === "none") {
-      togg.classList.remove("dashicons-minus");
-      togg.classList.add("dashicons-plus");
-    } else {
-       togg.classList.remove("dashicons-plus");
-       togg.classList.add("dashicons-minus");
-    }
-  }
-  showHide("none")
-  
-  
+
   showHideToggle.addEventListener("click", (e) => {
-    showHide(permBody.checkVisibility() ? "none" : "flex");    
+    displayPermissionsGroup(permBody.checkVisibility() ? "none" : "flex", cont);
   });
   // --- 1. SELECT ALL CHECKBOXES ---
   checkUncheckAll(".check-all-caps", ".cap-checkbox", cont);

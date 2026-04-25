@@ -15,6 +15,7 @@ class RolesController {
         // 3. Initialize variables to prevent "Undefined" errors in the hidden form
         $role = null;
         $all_roles = $role_model->get_all_roles();
+        $role_mapping = $role_model->get_roles_with_caps();
         $action = isset($_GET['action']) ? $_GET['action'] : 'list';
 
         if ( 'edit' === $action ) {

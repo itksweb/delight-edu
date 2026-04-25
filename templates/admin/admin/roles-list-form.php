@@ -28,7 +28,7 @@ $tspan = "4"
                         <?php include("{$part}/no-data.php") ?>
                     <?php else : ?>
                         <?php foreach ( $all_roles as $role ) : 
-                            $cap_count = isset($role->cap_count) ? $role->cap_count : 0;
+                            $cap_count = isset($role->capabilities) ? count($role->capabilities) : 0;
                         ?>
                             <tr class="is-row">
                                 <td class="col-cb">
@@ -123,7 +123,7 @@ $tspan = "4"
                                 <?php foreach ( $capabilities as $cap_slug => $cap_label ) : ?>
                                     <label class="dedu-checkbox-label">
                                         <input type="checkbox" class="cap-checkbox" name="capabilities[]" value="<?php echo esc_attr( $cap_slug ); ?>"
-                                            <?php checked( in_array( $cap_slug, $current_caps ) ); ?>>
+                                            >
                                         <span class="dedu-checkbox-text"><?php echo esc_html( $cap_label ); ?></span>
                                     </label>
                                 <?php endforeach; ?>
@@ -135,10 +135,14 @@ $tspan = "4"
 
             <div class="dedu-form-actions">
                 <button type="submit" class="dedu-btn dedu-btn-primary">
-                    <?php echo $is_edit ? 'Update Staff Role' : 'Create Staff Role'; ?>
+                    
                 </button>
             </div>
         </form>                   
     </div>
     
 </div>
+
+<script>
+    const ROLE_PERMISSIONS = <?php echo json_encode($role_mapping); ?>;
+</script>

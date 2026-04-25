@@ -61,6 +61,7 @@ const creatIt = (tag = "span", cls = "", text = "") => {
   return element;
 };
 
+
 const updateHiddenInput = (id = null) => {
   if (itemTypeSlug !== "class_subjects") {
     // 1. Create the selector string for the hidden input
@@ -510,3 +511,50 @@ const deleteOne = (e) => {
     window.location.href = `${baseAdminUrl}?action=dedu_delete_${itemTypeSlug}&id=${id}&_wpnonce=${nonce}`;
   }
 };
+
+
+
+// staff and role
+const displayPermissionsGroup = (action, grp) => {
+  const permBody = grp.querySelector(".dedu-cap-list");
+  const permHead = grp.querySelector(".cap-list-head");
+  const showHideToggle = grp.querySelector(".dedu-group-label");
+  const checkAllToggle = permHead.querySelector(".dedu-checkbox-label");
+  permBody.style.display = action;
+  checkAllToggle.style.display = action;
+  let togg = showHideToggle.querySelector(".dashicons");
+  if (action === "none") {
+    togg.classList.remove("dashicons-minus");
+    togg.classList.add("dashicons-plus");
+  } else {
+    togg.classList.remove("dashicons-plus");
+    togg.classList.add("dashicons-minus");
+  }
+};
+
+function syncPermissions(roleId, permissions = []) {
+  const allCheckboxes = document.querySelectorAll(".cap-checkbox");
+  // Uncheck all checkboxes
+  allCheckboxes.forEach((box) => {
+    box.checked = false;
+    box.disabled = false;
+    box.closest("label").style.opacity = "1";
+  });
+
+  const roleCaps = roleId ? ROLE_PERMISSIONS[roleId] : [];
+  allCheckboxes.forEach((box) => {
+    // 1. If it's in the ROLE, check and disable it
+    if (roleCaps.includes(box.value)) {
+      box.checked = true;
+      if (itemTypeSlug === "staff") {
+        box.disabled = true;
+        box.closest("label").style.opacity = "0.7";
+      }
+    }
+
+    // 2. If it's in the staff permissions, check it (if not already handled by role)
+    if (permissions.includes(box.value) && !roleCaps.includes(box.value)) {
+      box.checked = true;
+    }
+  });
+}

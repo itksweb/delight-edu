@@ -1,16 +1,13 @@
 <?php
 namespace DelightEDU\Assets\Admin;
+use DelightEDU\Models\StaffRole;
 
 class AssetProvider {
     public static function get_staff_data() {
         global $wpdb;
-
+        $role_model = new StaffRole();
         // Fetch role-to-capability mapping
-        $role_caps_raw = $wpdb->get_results("SELECT role_id, capability FROM {$wpdb->prefix}dedu_role_capabilities");
-        $role_mapping = [];
-        foreach ($role_caps_raw as $row) {
-            $role_mapping[$row->role_id][] = $row->capability;
-        }
+        $role_mapping = $role_model->get_roles_with_caps();
 
         return [
             'ajaxurl'         => admin_url('admin-ajax.php'),

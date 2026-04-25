@@ -23,7 +23,7 @@ class PermissionsRegistry {
                 'only_assigned_subjects' => 'Only Assigned Subjects' 
             ],
             'Student Attendance'  => [
-                'view_student Attendance'  =>  'View Student Attendance',
+                'view_student_attendance'  =>  'View Student Attendance',
                 'take _student_attendance'  =>  'Take Student Attendance'
             ],
             'Staff Attendance'  => [
