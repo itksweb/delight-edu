@@ -85,7 +85,7 @@ class Classes {
         $table_sections = $wpdb->prefix . 'dedu_sections';
         
         // Using LEFT JOIN to ensure classes with NO sections still show up
-        return $wpdb->get_results("
+        $results = $wpdb->get_results("
             SELECT c.*, GROUP_CONCAT(s.section_name ORDER BY s.section_name ASC SEPARATOR ', ') as section_list
             FROM {$this->table} c
             LEFT JOIN {$table_sections} s 
@@ -93,6 +93,15 @@ class Classes {
             GROUP BY c.id
             ORDER BY c.numeric_name ASC
         ");
+        if ( ! empty( $results ) ) {
+            foreach ( $results as $row ) {
+                // If section_list is not empty, explode it; otherwise, return an empty array
+                $row->section_list = ! empty( $row->section_list ) 
+                    ? explode( ', ', $row->section_list ) 
+                    : [];
+            }
+        }
+        return $results;
     }
     
     public function delete($id) {

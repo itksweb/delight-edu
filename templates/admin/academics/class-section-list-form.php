@@ -35,20 +35,8 @@ $tspan = "5"
                             <td><?php echo esc_html($class->numeric_name); ?></td>
                             <td>
                                 <?php 
-                                if (!empty($class->section_list)) {
-                                    $sections_array = explode(', ', $class->section_list);
-                                    $count = count($sections_array);
-                                    
-                                    // The 'data-tooltip' attribute holds the list for CSS to display
-                                    echo '<div class="dedu-tooltip-container">';
-                                        echo '<span class="dedu-badge-count">';
-                                            printf(_n('%d Section', '%d Sections', $count, 'delight-edu'), $count);
-                                        echo '</span>';
-                                        echo '<span class="dedu-tooltip-text">' . esc_html($class->section_list) . '</span>';
-                                    echo '</div>';
-                                } else {
-                                    echo '<span class="dedu-badge empty">0 Sections</span>';
-                                }
+                                    $the_list = $class->section_list;
+                                    include("{$part}/badge-with-tooltip.php");                     
                                 ?>
                             </td>
                             <td class="dedu-row-action">
@@ -117,4 +105,3 @@ $tspan = "5"
         </form>
     </div> 
 </div>
-

@@ -22,9 +22,10 @@ const renderEditScreen = (e) => {
   submitBtn.textContent = `Update ${itemType}`;
 
   roleName.value = name;
-  syncPermissions(id);
   updateUrlActionId(id);
   updateHiddenInput(id);
+  syncPermissions(id);
+  console.log("hey!");
   showFormView();
   allPerms?.forEach((cont) => {
     const hasCheck = cont.querySelector(".cap-checkbox:checked");

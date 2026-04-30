@@ -1,7 +1,6 @@
+
 *{
-  --dedu-grid-2 :repeat(2, minmax(0, 1fr));
-  --dedu-grid-3 :repeat(3, minmax(0, 1fr));
-  --dedu-grid-4 :repeat(4, minmax(0, 1fr));
+  box-sizing: border-box;
 }
 
 /*l
@@ -181,54 +180,6 @@
   margin-right: 4px;
 }
 
-/* Container for the tooltip */
-.dedu-tooltip-container {
-  position: relative;
-  display: inline-block;
-  cursor: help;
-}
-
-/* The actual tooltip bubble (hidden by default) */
-.dedu-tooltip-text {
-  visibility: hidden;
-  width: 140px;
-  background-color: #32373c;
-  /* WordPress Dark Grey */
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 8px;
-  position: absolute;
-  z-index: 10;
-  bottom: 125%;
-  /* Position above the badge */
-  left: 50%;
-  margin-left: -70px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 11px;
-  line-height: 1.4;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* The little triangle arrow at the bottom of the bubble */
-.dedu-tooltip-text::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: #32373c transparent transparent transparent;
-}
-
-/* Show the tooltip on hover */
-.dedu-tooltip-container:hover .dedu-tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-
 .dedu-card {
   background: #ffffff;
   border-radius: 8px;
@@ -260,52 +211,7 @@
   gap: 20px;
 }
 
-.dedu-permission-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 15px;
-}
 
-.cap-list-head {
-  display: flex;
-  border-bottom: 1px solid #e2e8f0;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  font-size: 12px;
-}
-
-.dedu-group-label {
-  margin: 0;
-  color: #334155;
-  cursor: pointer;
-}
-
-.dedu-group-label .dashicons {
-  font-size: 12px;
-}
-
-.dedu-cap-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.dedu-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #475569;
-}
-
-.dedu-checkbox-label:hover .dedu-checkbox-text {
-  color: #2563eb;
-}
 
 /* --- Helper Text --- */
 .dedu-field-help {

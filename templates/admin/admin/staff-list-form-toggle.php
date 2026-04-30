@@ -110,11 +110,13 @@ $tspan = "6"
             <input type="hidden" name="wp_user_id" id="wp_user_id" value="">
             <input type="hidden" name="existing_photo_url" id="existing_photo_url" value="">
             <?php wp_nonce_field('dedu_staff_nonce'); ?>
+
             
+            <?php include("{$part}/picture-upload.php") ?>
             <div class="dedu-card">
-                <fieldset class = "fields-group">
+                
+                <fieldset class = "fields-group perseonal-details">
                     <legend class = "dedu-card-title">Personal Details</legend>
-                    <?php include("{$part}/picture-upload.php") ?>
                     <div class = "unit">
                         <label>First Name*</label>
                         <input type="text" name="first_name" class="large-text" required>
@@ -150,7 +152,6 @@ $tspan = "6"
                 </fieldset>
             </div>
 
-            
             <div class="dedu-card">
                 <fieldset class = "fields-group">
                     <legend class = "dedu-card-title">Employment</legend>
@@ -228,31 +229,9 @@ $tspan = "6"
                 <fieldset class = "fields-group">
                     <legend class="dedu-card-title"><span class="dashicons dashicons-shield"></span>Staff Permissions</legend>
                     <p class="description">Selecting a role above will auto-fill these, but you can add/remove specific permissions for this individual.</p>
+                    <?php $caps_name = "staff_permissions[]" ?>
                     <?php foreach ($permission_groups as $group_name => $caps) : ?>
-                        <div class="dedu-permission-card">
-                            <div class="cap-list-head">
-                                <h4 class="dedu-group-label">
-                                    <?php echo esc_html($group_name); ?>
-                                    <small><span class="dashicons dashicons-plus"></span></small>
-                                </h4>
-                                <label class="dedu-checkbox-label">
-                                    <span class="dedu-checkbox-text">Select All</span>
-                                    <input type="checkbox" name="<?php echo esc_html($group_name); ?>" class="check-all-caps" >
-                                </label>
-                            </div>
-                            
-                            <div class="dedu-cap-list">
-                                <?php foreach ($caps as $cap_slug => $cap_label) : ?>
-                                    <label class="dedu-checkbox-label">
-                                        <input type="checkbox" name="staff_permissions[]"
-                                            class="cap-checkbox" 
-                                            value="<?php echo esc_attr($cap_slug); ?>" >
-                                            <span class="dedu-checkbox-text"><?php echo esc_html($cap_label); ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            
-                        </div>
+                        <?php include("{$part}/caps-group.php") ?>
                     <?php endforeach; ?>
                 </fieldset>
             </div>
@@ -266,6 +245,11 @@ $tspan = "6"
 </div>
 
 <style>
+
+    .perseonal-details{
+        position: relative;
+        margin-top: 50px;
+    }
     .prof {
         display: flex;
         align-items: center;

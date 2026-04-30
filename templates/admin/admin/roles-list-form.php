@@ -5,6 +5,7 @@ $data_name = "role";
 $tspan = "4"
 ?>
 
+
 <div class="wrap list-form dedu-admin-wrapper" data-type="role"> 
     <!-- <?php wp_nonce_field('dedu_bulk_roles_action', 'dedu-role-nonce'); ?> -->
     <div class="dedu-page-header">
@@ -68,23 +69,9 @@ $tspan = "4"
         <?php include("{$part}/table-bottom.php") ?>   
     </div>
     <div class="dedu-card hide-me" id="dedu-form-view"  >
-        <?php
-        $is_edit = ! empty( $role );
-        // Convert the string from the database into an array so in_array() works
-        $current_caps = [];
-        if ( ! empty( $role->capabilities ) ) {
-            // If it's already an array, use it; if it's a string, explode it
-            $current_caps = is_array($role->capabilities) 
-                ? $role->capabilities 
-                : array_map('trim', explode(',', $role->capabilities));
-        }
-        ?>
         <?php include("{$part}/tab-form-header.php") ?>
         <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
             <input type="hidden" name="action" value="dedu_save_role">
-            <?php if ( $is_edit ) : ?>
-                <input type="hidden" name="role_id" value="<?php echo $role->id; ?>">
-            <?php endif; ?>
             <?php wp_nonce_field( 'dedu_role_nonce' ); ?>
 
             <div class="dedu-card dedu-carded">
@@ -95,7 +82,7 @@ $tspan = "4"
                 <div class="dedu-form-group">
                     <label class="dedu-label" for="role_name">Display Name</label>
                     <input name="role_name" type="text" id="role_name" 
-                        value="<?php echo $is_edit ? esc_attr($role->role_name) : ''; ?>" 
+                        value="" 
                         class="dedu-input" placeholder="e.g. Senior Accountant" required>
                     <p class="dedu-field-help">Give this role a clear name that describes the staff's responsibility.</p>
                 </div>
@@ -107,35 +94,16 @@ $tspan = "4"
                 </div>
                 
                 <div class="dedu-permissions-grid"> 
-                    <?php foreach ( $groups as $group_name => $capabilities ) : ?>
-                        <div class="dedu-permission-card">
-                            <div class="cap-list-head">
-                                <h4 class="dedu-group-label">
-                                    <?php echo esc_html($group_name); ?>
-                                    <small><span class="dashicons dashicons-plus"></span></small>
-                                </h4>
-                                <label class="dedu-checkbox-label">
-                                    <span class="dedu-checkbox-text">Select All</span>
-                                    <input type="checkbox" name="<?php echo esc_html($group_name); ?>" class="check-all-caps" >
-                                </label>
-                            </div>
-                            <div class="dedu-cap-list">
-                                <?php foreach ( $capabilities as $cap_slug => $cap_label ) : ?>
-                                    <label class="dedu-checkbox-label">
-                                        <input type="checkbox" class="cap-checkbox" name="capabilities[]" value="<?php echo esc_attr( $cap_slug ); ?>"
-                                            >
-                                        <span class="dedu-checkbox-text"><?php echo esc_html( $cap_label ); ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
+                    <?php $caps_name = "capabilities[]" ?>
+                    <?php foreach ( $groups as $group_name => $caps ) : ?>
+                        <?php include("{$part}/caps-group.php") ?>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <div class="dedu-form-actions">
                 <button type="submit" class="dedu-btn dedu-btn-primary">
-                    
+                 Add role    
                 </button>
             </div>
         </form>                   

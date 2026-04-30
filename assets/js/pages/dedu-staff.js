@@ -26,12 +26,12 @@ const updatePhoto = (src) => {
   previewImg.src = src ? src : "";
   if (src) {
     previewContainer.classList.remove("hidden");
-    dropZone.classList.remove("bordered");
+    dropZone.classList.remove("image-upload");
     dropZone.querySelector("p").classList.add("hidden");
     dropZone.querySelector(".upload-icon").classList.add("hidden");
   } else {
     previewContainer.classList.add("hidden");
-    dropZone.classList.add("bordered");
+    dropZone.classList.add("image-upload");
     dropZone.querySelector("p").classList.remove("hidden");
     dropZone.querySelector(".upload-icon").classList.remove("hidden");
   }

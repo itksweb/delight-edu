@@ -3,7 +3,7 @@
         <select id="dedu-bulk-action-selector" class="dedu-dropdown-btn">
             <option value="">Bulk Actions</option>
             <option value="delete">Delete</option>
-            <option value="edit">Edit</option>
+            <option value="">Edit</option>
         </select>
         <button type="button" id="dedu-apply-bulk-action" class="dedu-btn-apply">Apply</button>
     </div>
