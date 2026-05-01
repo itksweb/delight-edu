@@ -8,7 +8,6 @@ use DelightEDU\Assets\Admin\Helpers;
 
 class StaffController {
     private $model;
- 
 
     public function __construct() {
         $this->model = new StaffModel();

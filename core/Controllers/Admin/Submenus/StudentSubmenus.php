@@ -1,7 +1,7 @@
 <?php
 namespace DelightEDU\Controllers\Admin\Submenus;
 
-use DelightEDU\Models\Classes;
+use DelightEDU\Controllers\Admin\Students\StudentsController;
 use DelightEDU\Models\Section;
 
 class StudentSubmenus {
@@ -19,7 +19,7 @@ class StudentSubmenus {
                 'p-title'    => __('Students', 'delight-edu'),
                 'm-title'    => __('Students', 'delight-edu'),
                 'slug'     => 'dedu-students',
-                'callback' => [$this, 'render_students_management_page']
+                'callback' => [new StudentsController(), 'render_students_page']
             ],
             [
                 'p-title'    => __('Print ID Cards', 'delight-edu'),

@@ -5,15 +5,35 @@ namespace DelightEDU\Database;
  * Handles Plugin Database Migrations
  */
 class Schema {
-
-    /**
-     * Create the custom tables
-     */
     public static function install() {
+        // 1. Run your existing table creation logic
+        self::create_tables();
+
+        // 2. Run the roles creation logic
+        self::create_roles();
+        
+        // 3. Clear rewrite rules (good practice for custom portals/slugs)
+        flush_rewrite_rules();
+    }
+
+    private static function create_roles() {
+        $roles = [
+            'dedu_staff'   => 'Staff',
+            'dedu_student' => 'Student',
+            'dedu_parent'  => 'Parent'
+        ];
+
+        foreach ($roles as $role_id => $display_name) {
+            // add_role returns the role object or null if it already exists
+            add_role($role_id, $display_name, ['read' => true]);
+        }
+    }
+
+    private static function create_tables(){
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
 
-         //-- 1. Custom Staff Roles Table
+        //-- 1. Custom Staff Roles Table
         $table_staff_roles = $wpdb->prefix . 'dedu_staff_roles';
         $sql_staff_roles = "CREATE TABLE $table_staff_roles (
             id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -108,18 +128,54 @@ class Schema {
         //-- 6. Students Table (Relational)
         $table_students = $wpdb->prefix . 'dedu_students';
         $sql_students = "CREATE TABLE $table_students (
-            id bigint(20) NOT NULL AUTO_INCREMENT,
-            user_id bigint(20) NOT NULL, -- Links to wp_users
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) UNSIGNED DEFAULT NULL,
+            profile_picture_id bigint(20) UNSIGNED DEFAULT NULL,
+            first_name varchar(100) NOT NULL,
+            middle_name varchar(100) DEFAULT NULL,
+            last_name varchar(100) NOT NULL,
+            email varchar(100) NOT NULL,
+            phone varchar(20) DEFAULT NULL,
+            address varchar(100) DEFAULT NULL,
+            gender enum('male', 'female') DEFAULT 'male',
+            marital_status varchar(20) DEFAULT 'single',
+            blood_group varchar(20) DEFAULT NULL,
+            date_of_birth date DEFAULT NULL,
             class_id bigint(20) NOT NULL, -- Links to our classes table
+            section_id bigint(20) DEFAULT NULL,
             admission_no varchar(50) NOT NULL,
             roll_no varchar(50),
-            date_of_birth date,
-            gender varchar(10),
-            phone varchar(20),
-            address text,
             status enum('active', 'suspended', 'graduated') DEFAULT 'active',
             PRIMARY KEY  (id),
             UNIQUE KEY admission_no (admission_no)
+        ) $charset_collate;";
+
+        $table_parents = $wpdb->prefix . 'dedu_parents';
+        $sql_parents = "CREATE TABLE $table_parents (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            wp_user_id bigint(20) UNSIGNED DEFAULT NULL,
+            profile_picture_id bigint(20) UNSIGNED DEFAULT NULL,
+            relationship varchar(20) NOT NULL,
+            first_name varchar(100) NOT NULL,
+            middle_name varchar(100) DEFAULT NULL,
+            last_name varchar(100) NOT NULL,
+            email varchar(100) NOT NULL,
+            phone varchar(20) DEFAULT NULL,
+            address varchar(100) DEFAULT NULL,
+            marital_status varchar(20) DEFAULT 'single',
+            PRIMARY KEY  (id),
+        ) $charset_collate;";
+
+        $table_student_parent = $wpdb->prefix . 'dedu_parents_student_mapping';
+        $sql_student_parent = "CREATE TABLE $table_student_parent (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            student_id bigint(20) NOT NULL,
+            parent_id bigint(20) NOT NULL,
+            relationship_type varchar(50) DEFAULT 'father', /* Mother, Father, Guardian */
+            is_emergency_contact boolean DEFAULT false,
+            PRIMARY KEY  (id),
+            KEY student_id (student_id),
+            KEY parent_id (parent_id)
         ) $charset_collate;";
 
         //-- 7. Master Subjects Table (The "What")
@@ -187,9 +243,6 @@ class Schema {
             KEY class_id (class_id)
         ) $charset_collate;";
 
-        
-        
-
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql_staff_roles );
         dbDelta( $sql_capabilities );
@@ -198,6 +251,8 @@ class Schema {
         dbDelta( $sql_sections );
         dbDelta( $sql_staff );
         dbDelta( $sql_students );
+        dbDelta( $sql_parents );
+        dbDelta( $sql_student_parent );
         dbDelta( $sql_subjects_master );
         dbDelta( $sql_class_subjects );
         dbDelta( $sql_staff_assignments );

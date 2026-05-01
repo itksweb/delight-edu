@@ -1,5 +1,9 @@
-<div class="dedu-upload-container image-upload" id="drop-zone">
-    <label for="staff_photo" class="dedu-upload-label">
+<?php 
+    $cls = $sub_pix ? "dedu-upload-container image-upload {$sub_pix}" : "dedu-upload-container image-upload";
+?>
+
+<div class="<?php echo esc_attr($cls) ?>">
+    <label for="<?php echo esc_attr($field_name) ?>" class="dedu-upload-label">
         <div class="upload-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -11,10 +15,10 @@
             <strong>Click to upload</strong> or drag and drop  <br>
             <small>PNG, JPG or GIF (max. 2MB)</small>
         </p>
-        <input type="file" name="staff_photo" id="staff_photo" accept="image/*" hidden>
+        <input type="file" name="<?php echo esc_attr($field_name) ?>" id="<?php echo esc_attr($field_name) ?>" accept="image/*" hidden>
     </label>
     
-    <div id="image-preview" class="image-preview hidden">
+    <div class="image-preview hidden">
         <img src="" alt="Preview">
         <button type="button" class="remove-img">x</button>
     </div>

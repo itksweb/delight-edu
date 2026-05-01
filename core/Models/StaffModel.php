@@ -41,15 +41,15 @@ class StaffModel {
      * Create a new Staff Member
      */
     public function create() {
-        global $wpdb;        
+        global $wpdb;  
+        
+        $user = [];
+        $user['email'] = sanitize_user($_POST['email']);
+        $user['password'] = !empty($_POST['password']) ? $_POST['password'] : wp_generate_password();
 
-        // 1. Check if email already exists in WordPress to prevent fatal errors
-        if (email_exists($_POST['email']) || username_exists($_POST['email'])) {
-           return new \WP_Error('email_exists', 'This email is already registered in the system.');
-        }
        
-        // 2. Create the WordPress User first
-        $user_id = Helpers::create_wp_user();
+        // 1. Create the WordPress User first
+        $user_id = Helpers::create_wp_user($user);
         if (is_wp_error($user_id)) return $user_id;
         
         // Sanitize the data
@@ -206,9 +206,7 @@ class StaffModel {
         return $results ? $results : [];
     }
 
-    /**
-     * Get a single column value from the staff table
-     */
+    
     public function get_staff_column($staff_id, $column_name) {
         global $wpdb;
         

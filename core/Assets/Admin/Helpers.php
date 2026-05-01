@@ -110,16 +110,19 @@ class Helpers {
         return wp_update_user($user_data);
     }
 
-    public static function create_wp_user() {
-        $username = sanitize_user($_POST['email']); // Or generate a specific format
-        $password = !empty($_POST['password']) ? $_POST['password'] : wp_generate_password();
-
-        $wp_user_id = wp_create_user($username, $password, sanitize_email($_POST['email']));
+    public static function create_wp_user($user, $role = "dedu_staff") {
+        
+        // 1. Check if email already exists in WordPress to prevent fatal errors
+        if (email_exists($user['email'])) {
+           return new \WP_Error('email_exists', 'This email is already registered in the system.');
+        }
+        $username = isset($user['username']) ? $user['username'] : $user['email'];
+        
+        $wp_user_id = wp_create_user($username, $user['password'], $user['email']);
         
         if (!is_wp_error($wp_user_id)) {
-            // Set their role to something specific like 'subscriber' or 'staff'
             $user = new \WP_User($wp_user_id);
-            $user->set_role('subscriber');
+            $user->set_role($role);
         }
 
         return $wp_user_id;
