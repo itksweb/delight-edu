@@ -12,8 +12,6 @@ const classId = document.querySelector('select[name="class_id"]');
 const password = document.querySelector('input[type="password"]');
 const dropZones = document.querySelectorAll(".dedu-upload-container");
 
-
-
 const renderAddNewScreen = () => {
   formTitle.textContent = `Add A New ${itemType}`;
   submitBtn.textContent = `Add ${itemType}`;
@@ -28,7 +26,7 @@ const renderAddNewScreen = () => {
   phone.value = "";
   joiningDate.value = todaysDate(); //set default date to today's date
   classId.value = "";
-  
+
   updateUrlActionId();
   updateHiddenInput();
   showFormView();
@@ -83,7 +81,6 @@ const renderEditScreen = async (e) => {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
-
   function handleFiles(dropZone, files, fileInput) {
     // 1. Check if files exists and has at least one item
     if (!files || files.length === 0) {
@@ -130,8 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
     e.stopPropagation();
   }
 
-  dropZones.forEach(dropZone => {
-    console.log("wetin", dropZone);
+  dropZones.forEach((dropZone) => {
+    // console.log("wetin", dropZone);
     const fileInput = dropZone.querySelector('input[type="file"]');
     const removeBtn = dropZone.querySelector(".remove-img");
 
@@ -165,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fileInput.value = ""; // Clear input
       updatePhoto(dropZone, "");
     });
-  })
+  });
 });
 
 const studentForm = document.querySelector("#student-form");
@@ -194,3 +191,113 @@ studentForm?.addEventListener("change", (e) => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  const parentsContainer = document.getElementById("parents-list");
+  const addBtn = document.getElementById("add-parent-btn");
+  let parentCount = 1;
+
+  // 1. Handle Toggles and Removal via Event Delegation
+  parentsContainer.addEventListener("change", function (e) {
+    // Toggle Logic: Existing vs New
+    if (e.target && e.target.classList.contains("parent-mode-switch")) {
+      const wrapper = e.target.closest(".parent-entry");
+      const newFields = wrapper.querySelector(".parent-fields");
+      const existingSelector = wrapper.querySelector(
+        ".existing-parent-selector"
+      );
+      const requiredInputs = newFields.querySelectorAll(".parent-required");
+
+      if (e.target.value === "existing") {
+        newFields.classList.add("hide-me");
+        existingSelector.classList.remove("hide-me");
+        requiredInputs.forEach((input) => (input.required = false));
+      } else {
+        newFields.classList.remove("hide-me");
+        existingSelector.classList.add("hide-me");
+        requiredInputs.forEach((input) => (input.required = true));
+      }
+    } else if (["father", "mother", "others"].includes(e.target.id)) {
+      const input = e.target.closest(".unit").querySelector(".radio-input");
+      if (e.target.id === "others") {
+        input?.classList.remove("hide-me");
+        input?.focus();
+      } else {
+        input.classList.add("hide-me");
+      }
+    } else if (e.target.matches(".radio-input")) {
+      const othersBtn = target(e, ".unit").querySelector("#others");
+      const othersLabel = othersBtn.nextElementSibling;
+      if (e.target.checkVisibility()) {
+        othersBtn.value = e.target.value.trim().toLowerCase();
+        othersLabel.textContent = e.target.value.trim();
+      }
+   
+    }
+  });
+
+  parentsContainer.addEventListener("click", function (e) {
+    // Remove Parent Logic
+    if (e.target && e.target.closest(".remove-parent-btn")) {
+      const row = e.target.closest(".parent-entry-wrapper");
+      row.remove();
+      parentCount--;
+      updateParentButtonState();
+    } else if (target(e, ".others")) {
+      const input = target(e, ".unit").querySelector(".radio-input");
+      input.classList.remove("hide-me");
+    } else if (!target(e, ".others") && !e.target.classList.contains("radio-input")) {
+      parentsContainer
+        .querySelectorAll(".radio-input")
+        .forEach((radioInput) => {
+          if (radioInput.checkVisibility()) radioInput.classList.add("hide-me");
+        });
+    }
+  });
+
+  // 2. Add New Parent Logic
+  addBtn.addEventListener("click", function () {
+    if (parentCount >= 3) {
+      alert("Maximum of 3 parents/guardians allowed.");
+      return;
+    }
+
+    const firstParent = document.querySelector(".parent-entry-wrapper");
+    const newParent = firstParent.cloneNode(true);
+    const index = parentCount;
+
+    // Reset and Update Inputs
+    newParent.setAttribute("data-index", index);
+
+    const inputs = newParent.querySelectorAll("input, select, textarea");
+    inputs.forEach((input) => {
+      // Update the array index in the name attribute: parents[0] -> parents[1]
+      if (input.name) {
+        input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
+      }
+
+      // Reset values except for the radio buttons
+      if (input.type !== "radio") {
+        input.value = "";
+      } else {
+        // Ensure radio button names are unique to their group
+        input.checked = input.value === "new";
+      }
+    });
+
+    // Clean up UI state for the clone
+    newParent.querySelector(".remove-parent-btn").classList.remove("hide-me");
+    newParent.querySelector(".parent-fields").classList.remove("hide-me");
+    newParent
+      .querySelector(".existing-parent-selector")
+      .classList.add("hide-me");
+
+    parentsContainer.appendChild(newParent);
+    parentCount++;
+    updateParentButtonState();
+  });
+
+  function updateParentButtonState() {
+    // Optional: Disable add button if 3 reached
+    addBtn.disabled = parentCount >= 3;
+  }
+});

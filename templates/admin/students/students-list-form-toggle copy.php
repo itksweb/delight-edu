@@ -192,118 +192,72 @@ $tspan = "6"
                 </fieldset>
             </div>
 
-            <div class="dedu-card" id="parents-container">
-                <div class="dedu-card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee;">
-                    <h2 class="dedu-card-title" style="margin:0;">Parent/Guardian Details</h2>
-                    <button type="button" id="add-parent-btn" class="button button-secondary">+ Add Another Parent</button>
-                </div>
-
-                <!-- The Wrapper for the list of parents -->
-                <div id="parents-list">
-                    <!-- Parent Entry 0 -->
-                    <div class="parent-entry-wrapper" data-index="0">
-                        <div class="parent-entry">
-                            <div class="parent-mode-toggle" >
-                                <label>
-                                    <input type="radio" name="parents[0][mode]" value="new" checked class="parent-mode-switch"> Create New Parent
-                                </label>
-                                <label style="margin-left: 20px;">
-                                    <input type="radio" name="parents[0][mode]" value="existing" class="parent-mode-switch"> Select Existing Parent
-                                </label>
-                            </div>
-
-                            <!-- Existing Parent Search (Hidden by default) -->
-                            <div class="existing-parent-selector hide-me">
-                                <label>Search Existing Parent (Phone or Email)</label>
-                                <select name="parents[0][existing_id]" class="large-text">
-                                    <option value="">-- Select Parent --</option>
-                                    <?php foreach ($all_parents as $p) : ?>
-                                        <option value="<?php echo $p->id; ?>"><?php echo "{$p->first_name} {$p->last_name} ({$p->phone_number})"; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <!-- New Parent Fields -->
-                            <div class="parent-fields titi">
-                                <?php 
-                                    $field_name = "parents[0][profile_photo]";
-                                    $sub_pix = "sub-pix";
-                                    include("{$part}/profile-picture.php");
-                                ?>
-                                <fieldset class = "fields-group ">
-                                    <legend class = "dedu-card-title">Parent Detail</legend>
-                                    <div class="unit" >
-                                        <span class="">
-                                            <?php foreach ($form_meta['relationship'] as $k => $v) : ?>
-                                                <label data-id="<?php echo $k; ?>" class="<?php echo $k; ?>" >
-                                                    <input type="radio" name="parents[0][relationship]" value="<?php echo $k; ?>" id = "<?php echo $k; ?>" > 
-                                                    <span class="lab" ><?php echo $v; ?></span> 
-                                                </label>
-                                            <?php endforeach; ?>
-                                        </span>                                        
-                                        <input type="text" class="radio-input hide-me">
-                                    </div>
-                                    <div class = "unit">
-                                        <label>First Name*</label>
-                                        <input type="text" name="parent[0][first_name]" class="large-text" required>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Middle Name*</label>
-                                        <input type="text" name="parent[0][middle_name]" class="large-text">
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Last Name*</label>
-                                        <input type="text" name="parent[0][last_name]" class="large-text" required>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Gender</label>
-                                        <select name="parent[0][gender]" class="large-text">
-                                            <?php foreach ($form_meta['genders'] as $k => $v) : ?>
-                                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Marital Status</label>
-                                        <select name="parent[0][marital_status]" class="large-text">
-                                            <?php foreach ($form_meta['marital_statuses'] as $k => $v) : ?>
-                                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Blood Group</label>
-                                        <select name="parent[0][blood_group]" class="large-text">
-                                            <?php foreach ($form_meta['blood_group'] as $k => $v) : ?>
-                                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Date of Birth</label>
-                                        <input type="date" name="parent[0][date_of_birth]" class="large-text">
-                                    </div>   
-                                    <div class = "unit">
-                                        <label>Address</label>
-                                        <input type="text" name="parent[0][address]" class="large-text" required>
-                                    </div>  
-                                    <div class = "unit">
-                                        <label>Email*</label>
-                                        <input type="email" name="parent[0][email]" class="large-text" required>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Password*</label>
-                                        <input type="password" name="parent[0][password]" class="large-text" required>
-                                    </div>
-                                    <div class = "unit">
-                                        <label>Phone Number</label>
-                                        <input type="text" name="parent[0][phone]" class="large-text">
-                                    </div>            
-                                </fieldset>
-                            </div>
-                            <button type="button" class="remove-parent-btn hide-me" style="color:red; border:none; background:none; cursor:pointer; margin-top:10px;">- Remove this parent</button>
+            <div class="dedu-card">
+                <div class="parent-entry">
+                    <?php 
+                        $field_name = "parent[profile_photo]";
+                        $sub_pix = "sub-pix";
+                        include("{$part}/profile-picture.php");
+                    ?>
+                    <fieldset class = "fields-group">
+                        <legend class = "dedu-card-title">Parent Detail</legend>
+                        <div class = "unit">
+                            <label>First Name*</label>
+                            <input type="text" name="parent[first_name]" class="large-text" required>
                         </div>
-                    </div>
+                        <div class = "unit">
+                            <label>Middle Name*</label>
+                            <input type="text" name="parent[middle_name]" class="large-text">
+                        </div>
+                        <div class = "unit">
+                            <label>Last Name*</label>
+                            <input type="text" name="parent[last_name]" class="large-text" required>
+                        </div>
+                        <div class = "unit">
+                            <label>Gender</label>
+                            <select name="parent[gender]" class="large-text">
+                                <?php foreach ($form_meta['genders'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Marital Status</label>
+                            <select name="parent[marital_status]" class="large-text">
+                                <?php foreach ($form_meta['marital_statuses'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Blood Group</label>
+                            <select name="parent[blood_group]" class="large-text">
+                                <?php foreach ($form_meta['blood_group'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="large-text">
+                        </div>   
+                        <div class = "unit">
+                            <label>Address</label>
+                            <input type="text" name="parent[address]" class="large-text" required>
+                        </div>  
+                        <div class = "unit">
+                            <label>Email*</label>
+                            <input type="email" name="parent[email]" class="large-text" required>
+                        </div>
+                        <div class = "unit">
+                            <label>Password*</label>
+                            <input type="password" name="parent[password]" class="large-text" required>
+                        </div>
+                        <div class = "unit">
+                            <label>Phone Number</label>
+                            <input type="text" name="parent[phone]" class="large-text">
+                        </div>            
+                    </fieldset>
                 </div>
             </div>
 
@@ -341,16 +295,12 @@ $tspan = "6"
         position: relative;
         margin-top: 50px;
     }
-
-    .parent-mode-toggle{
-        margin-bottom: 20px;
-        padding: 10px;
-        /* background: #fff; */
-        border-radius: 4px;
-    }
     .parent-entry {
-        
-        
+        margin-top: 60px;
+        background-color: bisque;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        padding: 20px;
     }
     
     .prof {
@@ -369,23 +319,15 @@ $tspan = "6"
     .sub-pix {
         width: 100px;
         height: 100px;
-        transform: translateY(10px);
+        transform: translateY(20px);
         /* grid-row: span 2; */
     }
     .sub-pix .upload-text {
         display: none;
-    }
-    .titi {
-        /* margin-top: 30px; */
-        background-color:#f6f6fa;
-        padding: 20px;
-        border-radius: 8px;
     }
 </style>
 
 <script>
     const sections = <?php echo json_encode($sections_by_class); ?>;
     const classes = <?php echo json_encode($classes); ?>;
-
-   
 </script>

@@ -30,7 +30,8 @@ class StudentsController {
             'genders' => ['male' => 'Male', 'female' => 'Female'],
             'marital_statuses' => ['single' => 'Single', 'married' => 'Married', 'divorced' => 'Divorced', 'widowed' => 'Widowed'],
             'working_hours' => ['full-time' => 'Full-time', 'part-time' => 'Part-time'],
-            'blood_group' => ['O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+' => 'B+', 'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-']
+            'blood_group' => ['O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+' => 'B+', 'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-'],
+            'relationship' => ['father' => 'Father', 'mother' => 'Mother', 'others' => 'Others']
         ];
 
         // 5. Pass everything to the template
