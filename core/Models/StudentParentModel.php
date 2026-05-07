@@ -7,7 +7,7 @@ class StudentParentModel {
 
     public function __construct() {
         global $wpdb;
-        $this->table = $wpdb->prefix . 'dedu_student_parent';
+        $this->table = $wpdb->prefix . 'dedu_parents_student_mapping';
     }
 
     public function link($student_id, $parent_id, $relationship = 'father') {

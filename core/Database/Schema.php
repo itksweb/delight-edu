@@ -144,6 +144,7 @@ class Schema {
             class_id bigint(20) NOT NULL, -- Links to our classes table
             section_id bigint(20) DEFAULT NULL,
             admission_no varchar(50) NOT NULL,
+            joining_date date DEFAULT NULL,
             roll_no varchar(50),
             status enum('active', 'suspended', 'graduated') DEFAULT 'active',
             PRIMARY KEY  (id),
@@ -159,11 +160,12 @@ class Schema {
             first_name varchar(100) NOT NULL,
             middle_name varchar(100) DEFAULT NULL,
             last_name varchar(100) NOT NULL,
-            email varchar(100) NOT NULL,
+            email varchar(100) DEFAULT NULL,
             phone varchar(20) DEFAULT NULL,
+            gender varchar(100) DEFAULT NULL,
             address varchar(100) DEFAULT NULL,
             marital_status varchar(20) DEFAULT 'single',
-            PRIMARY KEY  (id),
+            PRIMARY KEY  (id)
         ) $charset_collate;";
 
         $table_student_parent = $wpdb->prefix . 'dedu_parents_student_mapping';
@@ -171,8 +173,7 @@ class Schema {
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             student_id bigint(20) NOT NULL,
             parent_id bigint(20) NOT NULL,
-            relationship_type varchar(50) DEFAULT 'father', /* Mother, Father, Guardian */
-            is_emergency_contact boolean DEFAULT false,
+            relationship_type varchar(50) DEFAULT 'father',
             PRIMARY KEY  (id),
             KEY student_id (student_id),
             KEY parent_id (parent_id)

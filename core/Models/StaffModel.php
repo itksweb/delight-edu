@@ -45,12 +45,16 @@ class StaffModel {
         
         $user = [];
         $user['email'] = sanitize_user($_POST['email']);
-        $user['password'] = !empty($_POST['password']) ? $_POST['password'] : wp_generate_password();
+        $user['password'] = !empty($_POST['password']) ? $_POST['password'] : "PA\$\$1ng";
 
        
         // 1. Create the WordPress User first
         $user_id = Helpers::create_wp_user($user);
-        if (is_wp_error($user_id)) return $user_id;
+        if (is_wp_error($user_id) || !$user_id) {
+            $user_id = null; 
+        } else {
+            $user_id = (int) $user_id;
+        }
         
         // Sanitize the data
         $schema = $this->get_staff_schema();
@@ -177,6 +181,10 @@ class StaffModel {
     public function get_staff_by_id($id) {
         global $wpdb;
         $staff = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id), ARRAY_A);
+
+        $all_students = $wpdb->get_results(
+            "SELECT * FROM {$wpdb->prefix}dedu_students"
+        );
         // $staff = $wpdb->get_row($wpdb->prepare(
         //     "SELECT * FROM {$this->table_name} WHERE id = %d",
         //     $id

@@ -11,7 +11,7 @@ class StudentsController {
     }
 
     public function render_students_page() {
-        $student_members = $this->model->get_all();
+        $students = $this->model->get_all();
 
         // Get Classes for the "Form" dropdown
         global $wpdb;
@@ -38,30 +38,6 @@ class StudentsController {
         include DEDU_PATH . 'templates/admin/students/students-list-form-toggle.php';
     }
 
-    public function save_student_enrollment($post_data) {
-        // 1. Create WP User for the Student
-        $student_wp_id = $this->create_wp_account($post_data['email'], 'dedu_student');
-
-        // 2. Save to dedu_students table
-        $student_id = $this->student_model->create([
-            'wp_user_id'   => $student_wp_id,
-            'admission_no' => $post_data['admission_no'],
-            'class_id'     => $post_data['class_id'],
-        ]);
-
-        // 3. Handle the Parent (The "Student-First" Link)
-        if ( $post_data['parent_type'] === 'new' ) {
-            // Create new parent first...
-            $parent_id = $this->parent_model->create_with_wp_user($post_data['parent_info']);
-        } else {
-            // Use existing parent ID from a dropdown
-            $parent_id = $post_data['existing_parent_id'];
-        }
-
-        // 4. Update the relationship table
-        $this->rel_model->link($student_id, $parent_id, $post_data['relationship']);
-    }
-
     public function handle_save_student() {
         // 1. Security Check
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'dedu_student_nonce')) {
@@ -73,18 +49,87 @@ class StudentsController {
 
         if ($student_id > 0) {
             //UPDATE EXISTING
-            $result = $model->update($student_id);
-            $redirect_msg = 'student_updated';
+            $success = $model->update($student_id);
+            $message = 'student_updated';
         } else {
             // CREATE NEW
-            $result = $model->create();
-            $redirect_msg = 'student_created';
+            $success = $model->create();
+            $message = 'student_created';
         }
 
-        // 2. Redirect back to the directory with a success message
-        $redirect_url = admin_url('admin.php?page=dedu-student&message=' . $redirect_msg);
-        wp_redirect($redirect_url);
+        // This gets the URL the user was on before hitting "Save"
+        $referer = wp_get_referer();
+
+        if ( $success ) {
+            // If we have a referer, add the message to it; otherwise, use a default
+            $redirect_url = $referer ? add_query_arg( 'message', $message, $referer ) : admin_url( 'admin.php?page=dedu-student&message=' . $message );
+            wp_redirect( $redirect_url );
+        } else {
+            wp_redirect( add_query_arg( 'error', 'save_failed', $referer ) );
+        }
         exit;
+    }
+
+    public function handle_delete_student(){
+        $id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+
+        // 1. Security Check (Nonce)
+        if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'dedu_delete_student_' . $id ) ) {
+            wp_die( 'Security check failed.' );
+        }
+
+        // 2. Authorization
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized.' );
+        }
+        global $wpdb;
+        $referer = wp_get_referer();
+
+        $student_model = new StudentModel();
+        
+        
+
+        if ( $student_model->delete( $id ) ) {
+            // If we have a referer, add the message to it; otherwise, use a default
+            $redirect_url = $referer ? add_query_arg( 'message', 'student_deleted', $referer ) : admin_url( 'admin.php?page=dedu-roles&message=student_deleted' );
+            wp_redirect( $redirect_url );
+        } else {
+            wp_redirect( add_query_arg('error','delete_failed', $referer) );
+        }
+        exit;
+    }
+
+    public function ajax_get_student_details() {
+        // Security check
+        check_ajax_referer('dedu_student_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) { // Or your custom 'edit_student' perm
+            wp_send_json_error('Unauthorized');
+        }
+
+        $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+        
+        // Fetch the main record
+        $student = $this->model->get_student_by_id($id);
+        
+        if (!$student) {
+            wp_send_json_error('student member not found');
+        }
+
+        global $wpdb;
+        $table_link = $wpdb->prefix . 'dedu_parents_student_mapping';
+        $parents = $wpdb->get_col($wpdb->prepare(
+            "SELECT parent_id FROM $table_link WHERE student_id = %d", 
+            $id 
+        ));
+        
+        $photo_url = isset($student['profile_picture_id']) ? wp_get_attachment_url($student['profile_picture_id']) : '';
+        $student['photo_url'] = $photo_url;
+
+        wp_send_json_success([ 
+            'student' => $student, 
+            'parents' => $parents 
+        ]);
     }
 
 }

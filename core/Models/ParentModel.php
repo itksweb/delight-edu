@@ -14,6 +14,7 @@ class ParentModel {
     public function get_parent_schema() {
         return [
             'profile_picture_id'    => ['filter' => 'absint',  'format' => '%d'],
+            'relationship'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'first_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'middle_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'last_name'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
@@ -21,10 +22,7 @@ class ParentModel {
             'phone'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'address'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
             'gender'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'marital_status'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'date_of_birth'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'username'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
-            'blood_group'    => ['filter' => 'sanitize_text_field', 'format' => '%s'],
+            'marital_status'    => ['filter' => 'sanitize_text_field', 'format' => '%s']            
         ];
     }
 
@@ -37,12 +35,14 @@ class ParentModel {
        
         // 1. Create the WordPress User first
         $user_id = Helpers::create_wp_user($user, "dedu_parent");
-        if (is_wp_error($user_id)) return $user_id;
+        if (is_wp_error($user_id) || !$user_id) {
+            $user_id = null; 
+        } 
         
         // Sanitize the data
         $schema = $this->get_parent_schema();
-        $photoKey = !isset($_POST['parent_photo']) ? 'parent_photo':'';
-        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
+        $photoKey = !isset($data['parent_photo']) ? 'parent_photo':'';
+        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey, $data);
 
         $prep = [];
         $prep["wp_user_id"] = $user_id;
@@ -54,6 +54,8 @@ class ParentModel {
 
         // 3. Insert into custom table
         $inserted =  $wpdb->insert( $this->table, $data, $formats );
+
+        return $inserted ? $wpdb->insert_id : false;
     }
 
     public function get_all() {

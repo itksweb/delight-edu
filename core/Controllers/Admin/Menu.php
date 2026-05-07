@@ -114,6 +114,9 @@ class Menu {
             'subject_created' => 'Subject successfully added to master list',
             'subject_updated' => 'Subject successfully updated in master list',
             'subject_deleted'   => 'Subject removed successfully.',
+            'student_created'    => 'Student created successfully.',
+            'student_deleted'    => 'Student deleted successfully.',
+            'student_updated'    => 'Student updated successfully.',
         ];
 
         $text = '';
@@ -155,8 +158,9 @@ class Menu {
 
             // 2. Add Conditional Localization
             if ( 'dedu-staff' === $slug ) {
-                wp_localize_script( $slug, 'deduStaffData', AssetProvider::get_staff_data()
-            );
+                wp_localize_script( $slug, 'deduStaffData', AssetProvider::get_staff_data());
+            } elseif ('dedu-students' === $slug ) {
+                wp_localize_script( $slug, 'deduStudentData', AssetProvider::get_student_data());
             }
         }
 

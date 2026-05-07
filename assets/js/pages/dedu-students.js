@@ -1,32 +1,112 @@
 console.log("dedu-student.js loaded");
 
+const allFields = document.querySelectorAll("input, select, textarea");
+const parentsContainer = document.getElementById("parents-list");
+const firstParent = document.querySelector(".parent-entry");
 const wpUser = document.querySelector("input[name='wp_user_id']");
+const pixZone = document.querySelector(".dedu-upload-container:not(.sub-pix)");
 const fname = document.querySelector('input[name="first_name"]');
 const lname = document.querySelector('input[name="last_name"]');
 const mname = document.querySelector('input[name="middle_name"]');
 const email = document.querySelector('input[name="email"]');
 const phone = document.querySelector('input[name="phone"]');
-const joiningDate = document.querySelector('input[name="joining_date"]');
+const maritals = document.querySelector('select[name="marital_status"]');
+const bloodGroup = document.querySelector('select[name="blood_group"]');
 const dob = document.querySelector('input[name="date_of_birth"]');
+const address = document.querySelector('input[name="address"]');
+const addBtn = document.getElementById("add-parent-btn");
+
+const joiningDate = document.querySelector('input[name="joining_date"]');
+const admissionNumber = document.querySelector('input[name="admission_no"]');
 const classId = document.querySelector('select[name="class_id"]');
+const sectionId = document.querySelector('select[name="section_id"]');
 const password = document.querySelector('input[type="password"]');
 const dropZones = document.querySelectorAll(".dedu-upload-container");
+const classes = deduStudentData["classes"];
+const sections = deduStudentData["sections"];
+const allParents = deduStudentData["all_parents"];
+
+// reset parent entries
+const clearUnwantedParentEntries = () => {
+  const allPas = parentsContainer.querySelectorAll(".parent-entry");
+  allPas.forEach((pa) =>
+    pa === firstParent ? pa.setAttribute("data-index", 0) : pa.remove()
+  );
+};
+
+const resetInputs = (par = document, i = 0) => {
+  const inputs = par.querySelectorAll("input, select, textarea");
+  inputs.forEach((input) => {
+    // Reset input values
+    if (["radio", "checkbox"].includes(input.type)) {
+      input.checked = false;
+    } else if (input.type !== "hidden") {
+      input.value = "";
+    }
+
+    // Update the array index in the name attribute: parents[0] -> parents[1]
+    const regex = /^parents\[\d+\]/;
+    if (input.name && regex.test(input.name)) {
+      input.name = input.name.replace(/\[\d+\]/, `[${i}]`);
+    }
+  });
+};
+
+const parentModeSwitch = (par, mode = "") => {
+  if (mode === "new") {
+    par.querySelector(".existing-parent-selector").classList.add("hide-me");
+    par.querySelector(".parent-fields").classList.remove("hide-me");
+  } else if (mode === "existing") {
+    par.querySelector(".parent-fields").classList.add("hide-me");
+    par.querySelector(".existing-parent-selector").classList.remove("hide-me");
+  } else if (!mode) {
+    par.querySelector(".existing-parent-selector").classList.add("hide-me");
+    par.querySelector(".parent-fields").classList.add("hide-me");
+  }
+};
+
+const displayRemoveBtn = (par, mode = "show") => {
+  mode === "show"
+    ? par.querySelector(".remove-parent-btn").classList.remove("hide-me")
+    : par.querySelector(".remove-parent-btn").classList.add("hide-me");
+};
+
+const displayParGuardTop = (par, mode = "show") => {
+  mode === "show"
+    ? par.querySelector(".dedu-parent-guardian-top").classList.remove("hide-me")
+    : par.querySelector(".dedu-parent-guardian-top").classList.add("hide-me");
+};
+
+const populateParentFields = (par, parent) => {
+  par.querySelector("legend").textContent = parent["relationship"]
+    ? parent["relationship"]
+    : "";
+  const dropZone = par.querySelector(".sub-pix");
+  dropZone.style.transform = "translateY(10px)";
+  const parentInputs = par.querySelectorAll("input, select, textarea");
+  parentInputs.forEach((input) => {
+    if (input.name) {
+      const key = input.name.split("][")[1].slice(0, -1);
+      if (key !== "profile_photo") {
+        input.value = parent[key] ? parent[key] : "";
+      } else if (key === "profile_photo" && parent[key]) {
+        updatePhoto(dropZone, parent[key]);
+      }
+    }
+  });
+};
 
 const renderAddNewScreen = () => {
   formTitle.textContent = `Add A New ${itemType}`;
   submitBtn.textContent = `Add ${itemType}`;
 
-  // 1. clear Basic Fields
   wpUser.value = "";
-  // studentDbId.value = "";
-  fname.value = "";
-  lname.value = "";
-  mname.value = "";
-  email.value = "";
-  phone.value = "";
   joiningDate.value = todaysDate(); //set default date to today's date
-  classId.value = "";
-
+  clearUnwantedParentEntries();
+  resetInputs(); // clear/reset fields
+  firstParent.querySelector(".dedu-parent-guardian-top").classList.remove("hide-me");
+  firstParent.querySelector(".remove-parent-btn").classList.add("hide-me");
+  parentModeSwitch(firstParent)
   updateUrlActionId();
   updateHiddenInput();
   showFormView();
@@ -34,7 +114,6 @@ const renderAddNewScreen = () => {
 
 const renderEditScreen = async (e) => {
   const ID = target(e, ".dedu-edit-icon").dataset.id;
-  password.removeAttribute("required");
 
   // Prepare AJAX request
   const formData = new FormData();
@@ -51,25 +130,56 @@ const renderEditScreen = async (e) => {
     const result = await response.json();
 
     if (result.success) {
-      const data = result.data.student;
-      console.log("data: ", data);
+      const { student, parents } = result.data;
+      console.log("data: ", result.data);
 
+      clearUnwantedParentEntries();
+      resetInputs(); // clear/reset fields
+      firstParent.querySelector(".remove-parent-btn").classList.add("hide-me");
+     
       // Populate Basic Fields
-      formTitle.textContent = `Edit student: ${data.first_name} ${data.last_name}`;
-      wpUser.value = data.wp_user_id;
-      // updatePhoto(data.photo_url);
-      fname.value = data.first_name;
-      mname.value = data.middle_name || "";
-      lname.value = data.last_name;
-      email.value = data.email;
-      phone.value = data.phone || "";
-      joiningDate.value = data.joining_date;
-      dob.value = data.date_of_birth;
-      classId.value = data.class_id || "";
+      formTitle.textContent = `Edit student: ${student.first_name} ${student.last_name}`;
+      wpUser.value = student.user_id;
+      updatePhoto(pixZone, student.photo_url);
+      fname.value = student.first_name;
+      mname.value = student.middle_name || "";
+      lname.value = student.last_name;
+      email.value = student.email;
+      phone.value = student.phone || "";
+      admissionNumber.value = student["admission_no"] || "";
+      joiningDate.value = student.joining_date;
+      dob.value = student.date_of_birth;
+      classId.value = student.class_id;
+      sectionId.value = student.section_id || "";
+      address.value = student.address || "";
       submitBtn.textContent = "Update student";
 
-      updateUrlActionId(data.id);
-      updateHiddenInput(data.id);
+      // get student's parents from all parents
+      const studentParents = allParents.filter((par) =>
+        parents.includes(par.id)
+      );
+
+      if (studentParents.length) {
+        firstParent
+          ?.querySelector(".dedu-parent-guardian-top")
+          .classList.add("hide-me");
+
+        studentParents.forEach((parent, i) => {
+          if (+firstParent.dataset.index === i) {
+            // resetInputs(firstParent, i);
+            parentModeSwitch(firstParent, "new");
+            populateParentFields(firstParent, parent);
+          } else {
+            const newParent = firstParent.cloneNode(true);
+            resetInputs(newParent, i);
+            populateParentFields(newParent, parent);
+            parentsContainer.appendChild(newParent);
+          }
+        });
+      }
+
+      updateUrlActionId(student.id);
+      updateHiddenInput(student.id);
       showFormView();
     } else {
       alert("Error: " + result.data);
@@ -104,23 +214,6 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Please select a valid image file (JPG, PNG, or GIF).");
     }
   }
-  const updatePhoto = (dropZone, src = "") => {
-    // console.log("wetin", dropZone)
-    const previewContainer = dropZone.querySelector(".image-preview");
-    const previewImg = previewContainer.querySelector("img");
-    previewImg.src = src;
-    if (src) {
-      previewContainer.classList.remove("hidden");
-      dropZone.classList.remove("image-upload");
-      dropZone.querySelector("p").classList.add("hidden");
-      dropZone.querySelector(".upload-icon").classList.add("hidden");
-    } else {
-      previewContainer.classList.add("hidden");
-      dropZone.classList.add("image-upload");
-      dropZone.querySelector("p").classList.remove("hidden");
-      dropZone.querySelector(".upload-icon").classList.remove("hidden");
-    }
-  };
 
   function preventDefaults(e) {
     e.preventDefault();
@@ -192,32 +285,49 @@ studentForm?.addEventListener("change", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const parentsContainer = document.getElementById("parents-list");
-  const addBtn = document.getElementById("add-parent-btn");
   let parentCount = 1;
+  const parentSelect = parentsContainer.querySelector(
+    ".existing-parent-selector select"
+  );
+
+  //populate parents options
+  allParents.forEach((parent) => {
+    const text = `${parent["first_name"]} ${parent["last_name"]}`;
+    const opt = creatIt("option", "", text);
+    opt.setAttribute("value", parent.id);
+    parentSelect.appendChild(opt);
+  });
 
   // 1. Handle Toggles and Removal via Event Delegation
   parentsContainer.addEventListener("change", function (e) {
     // Toggle Logic: Existing vs New
     if (e.target && e.target.classList.contains("parent-mode-switch")) {
-      const wrapper = e.target.closest(".parent-entry");
+      const wrapper = target(e, ".parent-entry");
       const newFields = wrapper.querySelector(".parent-fields");
+      const relationshipToggle = wrapper.querySelector(".relationship-toggle");
       const existingSelector = wrapper.querySelector(
         ".existing-parent-selector"
       );
+      const existingParent = existingSelector.querySelector("select");
       const requiredInputs = newFields.querySelectorAll(".parent-required");
 
       if (e.target.value === "existing") {
         newFields.classList.add("hide-me");
+        relationshipToggle.classList.add("hide-me");
         existingSelector.classList.remove("hide-me");
+        existingParent.required = true;
         requiredInputs.forEach((input) => (input.required = false));
       } else {
         newFields.classList.remove("hide-me");
+        relationshipToggle.classList.remove("hide-me");
         existingSelector.classList.add("hide-me");
+        existingParent.required = false;
         requiredInputs.forEach((input) => (input.required = true));
       }
     } else if (["father", "mother", "others"].includes(e.target.id)) {
-      const input = e.target.closest(".unit").querySelector(".radio-input");
+      const input = target(e, ".relationship-toggle").querySelector(
+        ".radio-input"
+      );
       if (e.target.id === "others") {
         input?.classList.remove("hide-me");
         input?.focus();
@@ -225,27 +335,33 @@ document.addEventListener("DOMContentLoaded", function () {
         input.classList.add("hide-me");
       }
     } else if (e.target.matches(".radio-input")) {
-      const othersBtn = target(e, ".unit").querySelector("#others");
+      const othersBtn = target(e, ".relationship-toggle").querySelector(
+        "#others"
+      );
       const othersLabel = othersBtn.nextElementSibling;
       if (e.target.checkVisibility()) {
         othersBtn.value = e.target.value.trim().toLowerCase();
         othersLabel.textContent = e.target.value.trim();
       }
-   
     }
   });
 
   parentsContainer.addEventListener("click", function (e) {
     // Remove Parent Logic
     if (e.target && e.target.closest(".remove-parent-btn")) {
-      const row = e.target.closest(".parent-entry-wrapper");
+      const row = e.target.closest(".parent-entry");
       row.remove();
       parentCount--;
       updateParentButtonState();
     } else if (target(e, ".others")) {
-      const input = target(e, ".unit").querySelector(".radio-input");
+      const input = target(e, ".relationship-toggle").querySelector(
+        ".radio-input"
+      );
       input.classList.remove("hide-me");
-    } else if (!target(e, ".others") && !e.target.classList.contains("radio-input")) {
+    } else if (
+      !target(e, ".others") &&
+      !e.target.classList.contains("radio-input")
+    ) {
       parentsContainer
         .querySelectorAll(".radio-input")
         .forEach((radioInput) => {
@@ -256,48 +372,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 2. Add New Parent Logic
   addBtn.addEventListener("click", function () {
-    if (parentCount >= 3) {
-      alert("Maximum of 3 parents/guardians allowed.");
-      return;
-    }
-
-    const firstParent = document.querySelector(".parent-entry-wrapper");
     const newParent = firstParent.cloneNode(true);
     const index = parentCount;
 
-    // Reset and Update Inputs
-    newParent.setAttribute("data-index", index);
-
-    const inputs = newParent.querySelectorAll("input, select, textarea");
-    inputs.forEach((input) => {
-      // Update the array index in the name attribute: parents[0] -> parents[1]
-      if (input.name) {
-        input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
-      }
-
-      // Reset values except for the radio buttons
-      if (input.type !== "radio") {
-        input.value = "";
-      } else {
-        // Ensure radio button names are unique to their group
-        input.checked = input.value === "new";
-      }
-    });
-
-    // Clean up UI state for the clone
-    newParent.querySelector(".remove-parent-btn").classList.remove("hide-me");
-    newParent.querySelector(".parent-fields").classList.remove("hide-me");
-    newParent
-      .querySelector(".existing-parent-selector")
-      .classList.add("hide-me");
-
+    resetInputs(newParent, index); // Reset and Update Inputs
     parentsContainer.appendChild(newParent);
     parentCount++;
     updateParentButtonState();
   });
 
-  function updateParentButtonState() {
-    // Optional: Disable add button if 3 reached
-    addBtn.disabled = parentCount >= 3;
-  }
+  const updateParentButtonState = () => (addBtn.disabled = parentCount >= 3);
 });

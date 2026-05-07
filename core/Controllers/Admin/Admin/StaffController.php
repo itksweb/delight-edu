@@ -51,6 +51,7 @@ class StaffController {
             $role_mapping[$row->role_id][] = $row->capability;
         }
 
+        
         // 3. Get Classes for the "Form Master" dropdown
         global $wpdb;
         $table_classes = $wpdb->prefix . 'dedu_classes';

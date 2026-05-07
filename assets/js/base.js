@@ -61,6 +61,24 @@ const creatIt = (tag = "span", cls = "", text = "") => {
   return element;
 };
 
+const updatePhoto = (dropZone, src = "") => {
+  // console.log("wetin", dropZone)
+  const previewContainer = dropZone.querySelector(".image-preview");
+  const previewImg = previewContainer.querySelector("img");
+  previewImg.src = src;
+  if (src) {
+    previewContainer.classList.remove("hidden");
+    dropZone.classList.remove("image-upload");
+    dropZone.querySelector("p").classList.add("hidden");
+    dropZone.querySelector(".upload-icon").classList.add("hidden");
+  } else {
+    previewContainer.classList.add("hidden");
+    dropZone.classList.add("image-upload");
+    dropZone.querySelector("p").classList.remove("hidden");
+    dropZone.querySelector(".upload-icon").classList.remove("hidden");
+  }
+};
+
 
 const updateHiddenInput = (id = null) => {
   if (itemTypeSlug !== "class_subjects") {

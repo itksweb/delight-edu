@@ -5,6 +5,7 @@ use DelightEDU\Controllers\Admin\Academics\ClassSectionController;
 use DelightEDU\Controllers\Admin\Academics\SubjectsController;
 use DelightEDU\Controllers\Admin\Admin\StaffController;
 use DelightEDU\Controllers\Admin\Admin\RolesController;
+use DelightEDU\Controllers\Admin\Students\StudentsController;
 
 class PostHandler {
 
@@ -41,6 +42,15 @@ class PostHandler {
         ==========================================*/
         add_action( 'admin_post_dedu_save_staff', [ new StaffController(), 'handle_save_staff' ] );
         add_action( 'admin_post_dedu_delete_staff', [ new StaffController(), 'handle_delete_staff' ] );
+
+
+        /*==========================================
+          ==>  STUDENT MODULE HOOKS  
+        ==========================================*/
+        add_action('admin_post_dedu_save_student', [new StudentsController(), 'handle_save_student']);
+        add_action( 'admin_post_dedu_delete_student', [ new StudentsController(), 'handle_delete_student' ] );
+        // If you want it to work for logged-out users (rare for admin forms):
+        // add_action('admin_post_nopriv_dedu_save_student', [$this, 'handle_save_student']);
     }
 
     

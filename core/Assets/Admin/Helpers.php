@@ -4,7 +4,9 @@ namespace DelightEDU\Assets\Admin;
 
 class Helpers {
 
-    public static function sanitize_data($schema, $wp_user_id, $photo = "") {
+    public static function sanitize_data($schema, $wp_user_id, $photo = "", $dataa = []) {
+
+        $data = count($dataa) ? $dataa : $_POST;
         $data_to_save = [];
         $format_array = [];
 
@@ -12,7 +14,7 @@ class Helpers {
         $profile_picture_id = '';
         if ($photo) {
            if (!empty($_FILES[$photo]['name'])) {
-                $profile_picture_id = self::upload_staff_photo($photo, $wp_user_id ); 
+                $profile_picture_id = self::upload_user_photo($photo, $wp_user_id ); 
             }
         }
         
@@ -23,13 +25,13 @@ class Helpers {
                 $format_array[] = $rules['format']; 
                 continue;
             }
-            if ($column ==='role_id' && !isset($_POST[$column]) ) {
-                $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
+            if ($column ==='role_id' && !isset($data[$column]) ) {
+                $data_to_save[$column] = call_user_func($rules['filter'], $data[$column]);
                 $format_array[] = $rules['format']; 
                 continue;
             }
-            if (isset($_POST[$column])) {
-                $data_to_save[$column] = call_user_func($rules['filter'], $_POST[$column]);
+            if (isset($data[$column])) {
+                $data_to_save[$column] = call_user_func($rules['filter'], $data[$column]);
                 $format_array[] = $rules['format']; // Automatically adds the right %s, %d, or %f
             }
         }
@@ -79,7 +81,7 @@ class Helpers {
         return false; // Return false so we know it failed
     }
 
-    public static function upload_staff_photo($file_key, $wp_user_id) {
+    public static function upload_user_photo($file_key, $wp_user_id) {
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
