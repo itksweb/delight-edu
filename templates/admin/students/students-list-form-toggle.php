@@ -208,45 +208,46 @@ $tspan = "6"
 
             <div class="dedu-card" id="parents-container">
                 <div class="dedu-parent-card-header" >
-                    <h2 class="dedu-card-title" style="margin:0;">Parent/Guardian Details</h2>
-                    <button type="button" id="add-parent-btn" class="button button-secondary" style="display: flex; align-items: center; gap: 5px;"><span class="dashicons dashicons-plus"></span> Add Another</button>
+                    <h2 class="dedu-card-title" >Parent/Guardian Details</h2>
+                    <button type="button" id="add-parent-btn" class="button button-secondary">
+                        <span class="dashicons dashicons-plus"></span>
+                        Add Another
+                    </button>
                 </div>
 
                 <!-- The Wrapper for the list of parents -->
                 <div id="parents-list">
                     <!-- Parent Entry 0 -->
                     <div class="parent-entry" data-index="0">
-                        <div class="dedu-parent-guardian-top">
-                            <div class="parent-mode-toggle" >
+                        <div class="dedu-parent-guardian-top fields-group">
+                            <div class="unit parent-mode-toggle" >
                                 <label>
-                                    <input type="radio" name="parents[0][mode]" value="new" checked class="parent-mode-switch" required> Create New Parent
+                                    <input type="radio" name="parents[0][mode]" value="new" class="parent-mode-switch" required> Create New Parent
                                 </label>
                                 <label >
-                                    <input type="radio" name="parents[0][mode]" value="existing" class="parent-mode-switch"> Select Existing Parent
+                                    <input type="radio" name="parents[0][mode]" value="existing" class="parent-mode-switch" required> Select Existing Parent
                                 </label>
                             </div>
                             <div class="relationship-toggle" >
-                                <span class="">
+                                <span class="labels">
                                     <?php foreach ($form_meta['relationship'] as $k => $v) : ?>
                                         <label data-id="<?php echo $k; ?>" class="<?php echo $k; ?>" >
                                             <input type="radio" name="parents[0][relationship]" value="<?php echo $k; ?>" id = "<?php echo $k; ?>" required> 
                                             <span class="lab" ><?php echo $v; ?></span> 
                                         </label>
                                     <?php endforeach; ?>
-                                </span>                                        
+                                </span>
+                                
                                 <input type="text" class="radio-input hide-me">
                             </div>
+                                <!-- Existing Parent Search (Hidden by default) -->
+                            <div class="unit existing-parent-selector hide-me">
+                                <label>Search Existing Parent (Phone or Email)</label>
+                                <select name="parents[0][existing_id]" required>
+                                    <option value="">-- Select Parent --</option>
+                                </select>
+                            </div>
                         </div>
-                        
-                        <!-- Existing Parent Search (Hidden by default) -->
-                        <div class="existing-parent-selector hide-me">
-                            <label>Search Existing Parent (Phone or Email)</label>
-                            <select name="parents[0][existing_id]">
-                                <option value="">-- Select Parent --</option>
-                                
-                            </select>
-                        </div>
-
                         <!-- New Parent Fields -->
                         <div class="parent-fields hide-me">
                             <?php 
@@ -259,15 +260,15 @@ $tspan = "6"
                                 
                                 <div class = "unit">
                                     <label>First Name*</label>
-                                    <input type="text" name="parents[0][first_name]" class="large-text" required>
+                                    <input type="text" name="parents[0][first_name]" class="parent-required" required>
                                 </div>
                                 <div class = "unit">
-                                    <label>Middle Name*</label>
+                                    <label>Middle Name</label>
                                     <input type="text" name="parents[0][middle_name]" class="large-text">
                                 </div>
                                 <div class = "unit">
                                     <label>Last Name*</label>
-                                    <input type="text" name="parents[0][last_name]" class="large-text" required>
+                                    <input type="text" name="parents[0][last_name]" class="parent-required" required>
                                 </div>
                                 <div class = "unit">
                                     <label>Gender</label>
@@ -295,7 +296,7 @@ $tspan = "6"
                                 </div>
                                 <div class = "unit">
                                     <label>Address</label>
-                                    <input type="text" name="parents[0][address]" class="large-text">
+                                    <input type="text" name="parents[0][address]" class="parent-required">
                                 </div>  
                                 <div class = "unit">
                                     <label>Email*</label>
@@ -307,11 +308,14 @@ $tspan = "6"
                                 </div>
                                 <div class = "unit">
                                     <label>Phone Number</label>
-                                    <input type="text" name="parents[0][phone]" class="large-text">
+                                    <input type="text" name="parents[0][phone]" class="">
                                 </div>            
                             </fieldset>
                         </div>
-                        <button type="button" class="remove-parent-btn hide-me" style="color:red; border:none; background:none; cursor:pointer; margin-top:10px;">- Remove this parent</button>
+                        
+                        <button type="button" class="remove-parent-btn hide-me">
+                            - Remove this parent
+                        </button>
                     </div>
                 </div>
             </div>
@@ -330,55 +334,82 @@ $tspan = "6"
         margin-top: 50px;
     }
 
-    .dedu-parent-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        border-bottom: 1px solid #eee;
-    }
+    #parents-container {
+        .dedu-parent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
 
-    .dedu-parent-guardian-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 40px;
-        padding-bottom: 20px;
-    }
-    .dedu-parent-guardian-top.hide-me {
-        display: none;
-    }
-    
+            h2 { margin:0; }
+            #add-parent-btn {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+        }
 
-    .parent-mode-toggle{
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-        /* padding: 10px; */
-        flex-wrap: wrap;
-    }
-    .relationship-toggle {
-        display: flex;
-        align-items: flex-end;
-        justify-content: flex-start;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        flex-wrap: wrap;
-    }
+        #parents-list .parent-entry {
+            margin-top: 30px;
+            background-color:#f6f6fa;
+            padding: 20px;
+            border-radius: 8px;
+            
 
-    .relationship-toggle.hide-me {
-        display: none !important;
-    }
-    .parent-entry {
-        margin-top: 30px;
-        background-color:#f6f6fa;
-        padding: 20px;
-        border-radius: 8px;
+            .dedu-parent-guardian-top {
+                align-items: flex-start;
+                border-bottom: 1px solid #eee;
+                margin-bottom: 40px;
+                padding-bottom: 20px;
+
+                .parent-mode-toggle{
+                    align-items: flex-start;
+                    flex-wrap: wrap;
+                }
+                .relationship-toggle {
+                    display: grid;
+                    gap: 20px;
+                    align-items: flex-end;
+                    justify-content: flex-end;
+
+                    .labels {
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: flex-end;
+                        column-gap: 10px;
+                    }       
+                }
+                .relationship-toggle.hide-me {
+                    display: none !important;
+                }
+
+            }
+            .dedu-parent-guardian-top.hide-me {
+                display: none;
+            }
+            .parent-fields .sub-pix {
+                width: 100px;
+                height: 100px;
+                transform: translateY(-80px);
+
+                .upload-text {
+                    display: none;
+                }
+            }
+            .remove-parent-btn {
+                color:red;
+                border:none;
+                background:none;
+                cursor:pointer;
+                margin-top:10px;
+            }
+
+        }
         
     }
+
+    
     
     .prof {
         display: flex;
@@ -393,20 +424,7 @@ $tspan = "6"
         background-color: #ef4444;
         object-fit: cover;
     }
-    .sub-pix {
-        width: 100px;
-        height: 100px;
-        transform: translateY(-80px);
-        /* grid-row: span 2; */
-    }
-    .sub-pix .upload-text {
-        display: none;
-    }
-    .titi {
-        background-color:#f6f6fa;
-        padding: 20px;
-        border-radius: 8px;
-    }
+    
     .space-up{
         margin-top: 60px;
     }
