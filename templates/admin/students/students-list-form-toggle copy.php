@@ -13,7 +13,7 @@ $tspan = "6"
 <div class="wrap list-form dedu-admin-wrapper" data-type="student"> 
     <!-- <?php wp_nonce_field('dedu_bulk_roles_action', 'dedu-student-nonce'); ?> -->
     <div class="dedu-page-header">
-        <h1 class="dedu-page-title">students Management</h1>
+        <h1 class="dedu-page-title">students ookay o Management</h1>
     </div>
     <div class="dedu-card" id="dedu-list-view">
         <?php include("{$part}/tab-list-header.php") ?>
