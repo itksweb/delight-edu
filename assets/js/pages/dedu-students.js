@@ -43,34 +43,25 @@ const updateSelectedParents = (changedSelect, index) => {
 const disableSelectedParentOptions = (select) => {
   const options = [...select.options];
   options.forEach((opt) => {
-    opt.removedAttribute("data-disabled"); // First, enable all options
+    opt.disabled = false; // Enable all options first
     if (selectedParents.includes(opt.value)) {
-      opt.setAttribute("data-disabled", "true"); // Mark as disabled
+      opt.disabled = true; // Disable options that are already selected
     }
   });
-  options.forEach((opt) => {
-    opt.disabled = selectedParents.includes(opt.value);
-  });
+  
 };
 
 const updateParentOptions = (changedSelect) => {
-  // const select = document.getElementById("myDropdown");
-  const selectedOption = changedSelect.options[changedSelect.selectedIndex];
-
-  if (selectedOption.disabled) {
-    alert("You cannot select this option!");
-    // Optional: Reset to a valid option or clear the selection
-    // select.value = "";
-  }
-  console.log("Changed Select: ", changedSelect);
   const prevValue = changedSelect.dataset.prev;
   const index = selectedParents.indexOf(prevValue);
+  console.log( "Index: ", index );
   updateSelectedParents(changedSelect, index);
   const allEntries = parentsContainer.querySelectorAll(
     ".existing-parent-selector select",
   );
   allEntries.forEach((select) => disableSelectedParentOptions(select));
   console.log("Selected Parents: ", selectedParents);
+  
 };
 
 const populateParentOptions = (select, options) => {
@@ -78,11 +69,6 @@ const populateParentOptions = (select, options) => {
     const text = `${parent["first_name"]} ${parent["last_name"]}`;
     const opt = creatIt("option", "", text);
     opt.setAttribute("value", parent.id);
-    opt.addEventListener("click", (e) => {
-      if (opt.disabled) {
-        alert("This parent is already selected by you. Please choose another.");
-      }
-    });
     select.appendChild(opt);
   });
 };
@@ -375,7 +361,6 @@ parentsContainer.addEventListener("change", function (e) {
     const parent = target(e, ".parent-entry");
 
     const index = parent.dataset.index;
-    console.log(index);
     if (e.target.value === "existing") parentModeSwitch(parent, "existing");
     else if (e.target.value === "new") parentModeSwitch(parent, "new");
   } else if (["father", "mother", "others"].includes(e.target.id)) {

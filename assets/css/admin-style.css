@@ -298,7 +298,8 @@
 /* Styling for disabled controls */
 input:disabled,
 select:disabled,
-button:disabled {
+button:disabled,
+option.disabled {
   cursor: not-allowed;
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
