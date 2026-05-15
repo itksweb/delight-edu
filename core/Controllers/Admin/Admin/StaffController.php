@@ -95,7 +95,7 @@ class StaffController {
         // Fetch this staff's specific permissions from dedu_staff_capabilities
         $permissions = $this->model->get_staff_permissions($staff_id);
         
-        $photo_url = isset($staff['profile_picture_id']) ? wp_get_attachment_url($staff['profile_picture_id']) : $default_avatar_url;
+        $photo_url = isset($staff['profile_picture_id']) ? wp_get_attachment_url($staff['profile_picture_id']) : "";
         $staff['photo_url'] = $photo_url;
 
         wp_send_json_success([

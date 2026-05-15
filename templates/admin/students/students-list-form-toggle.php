@@ -172,7 +172,7 @@ $tspan = "6"
                     </div>
                     <div class = "unit" >
                         <label>Assigned Class</label>
-                        <select name="class_id" id="class-field">
+                        <select name="class_id" id="class-field" required>
                             <option value="">-- No Class Assigned --</option>
                             <?php foreach ($classes as $c) : ?>
                                 <option value="<?php echo $c->id; ?>"><?php echo esc_html($c->class_name); ?></option>
@@ -181,7 +181,7 @@ $tspan = "6"
                     </div>
                     <div class = "unit">
                         <label>Assigned Section</label>
-                        <select name="section_id" id="sections-field">
+                        <select name="section_id" id="sections-field" required>
                             <option value="" disabled selected>-- select a class first --</option>
                         </select>
                     </div>
@@ -243,7 +243,7 @@ $tspan = "6"
                                 <!-- Existing Parent Search (Hidden by default) -->
                             <div class="unit existing-parent-selector hide-me">
                                 <label>Search Existing Parent (Phone or Email)</label>
-                                <select name="parents[0][existing_id]" required>
+                                <select name="parents[0][existing_id]" data-prev = "" required>
                                     <option value="">-- Select Parent --</option>
                                 </select>
                             </div>

@@ -1,10 +1,9 @@
 console.log("dedu-staff.js loaded");
 
 const wpUser = document.querySelector("input[name='wp_user_id']");
+const dropZones = document.querySelectorAll(".dedu-upload-container");
+const pixZone = document.querySelector(".dedu-upload-container:not(.sub-pix)");
 const staffDbId = document.getElementById("staff_db_id");
-const previewContainer = document.querySelector("#image-preview");
-const previewImg = previewContainer.querySelector("img");
-const removeBtn = previewContainer.querySelector(".remove-img");
 const fname = document.querySelector('input[name="first_name"]');
 const lname = document.querySelector('input[name="last_name"]');
 const mname = document.querySelector('input[name="middle_name"]');
@@ -20,22 +19,7 @@ const classId = document.querySelector('select[name="class_id"]');
 const password = document.querySelector('input[type="password"]');
 const academicFields = document.querySelectorAll("academic_field");
 const allPerms = document.querySelectorAll(".dedu-permission-card");
-const dropZone = document.getElementById("drop-zone");
-
-const updatePhoto = (src) => {
-  previewImg.src = src ? src : "";
-  if (src) {
-    previewContainer.classList.remove("hidden");
-    dropZone.classList.remove("image-upload");
-    dropZone.querySelector("p").classList.add("hidden");
-    dropZone.querySelector(".upload-icon").classList.add("hidden");
-  } else {
-    previewContainer.classList.add("hidden");
-    dropZone.classList.add("image-upload");
-    dropZone.querySelector("p").classList.remove("hidden");
-    dropZone.querySelector(".upload-icon").classList.remove("hidden");
-  }
-};
+// const dropZone = document.getElementById("drop-zone");
 
 
 const ROLE_PERMISSIONS = deduStaffData.rolePermissions;
@@ -49,7 +33,7 @@ function syncPermissions(roleId, permissions = []) {
     box.closest("label").style.opacity = "1";
   });
 
-  const roleCaps = roleId ? ROLE_PERMISSIONS[roleId] : [];
+  const roleCaps = +roleId ? ROLE_PERMISSIONS[roleId] : [];
   allCheckboxes.forEach((box) => {
     // 1. If it's in the ROLE, check and disable it
     if (roleCaps.includes(box.value)) {
@@ -128,7 +112,7 @@ const renderEditScreen = async (e) => {
       formTitle.textContent = `Edit Staff: ${data.first_name} ${data.last_name}`;
       wpUser.value = data.wp_user_id;
       staffDbId.value = data.id;
-      updatePhoto(data.photo_url);
+      updatePhoto(pixZone, data.photo_url);
       fname.value = data.first_name;
       mname.value = data.middle_name || "";
       lname.value = data.last_name;
@@ -165,38 +149,7 @@ const renderEditScreen = async (e) => {
 };
 
 document.addEventListener("DOMContentLoaded", function () {
-  const fileInput = document.getElementById("staff_photo");
-
-  // Handle File Selection
-  fileInput.addEventListener("change", function (e) {
-    handleFiles(this.files);
-  });
-
-  // Drag and Drop Logic
-  ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-  });
-
-  function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  dropZone.addEventListener("dragover", () =>
-    dropZone.classList.add("drag-over"),
-  );
-  dropZone.addEventListener("dragleave", () =>
-    dropZone.classList.remove("drag-over"),
-  );
-
-  dropZone.addEventListener("drop", (e) => {
-    dropZone.classList.remove("drag-over");
-    const files = e.dataTransfer.files;
-    fileInput.files = files; // Sync drag-dropped file to the actual input
-    handleFiles(files);
-  });
-
-  function handleFiles(files) {
+  function handleFiles(dropZone, files, fileInput) {
     // 1. Check if files exists and has at least one item
     if (!files || files.length === 0) {
       return; // Exit early if no file is selected
@@ -209,28 +162,59 @@ document.addEventListener("DOMContentLoaded", function () {
       fileInput.value = ""; // Reset the input
       return;
     }
-    
+
     // 2. Now it's safe to check the type
     if (file && file.type && file.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        updatePhoto(e.target.result);
-        // previewImg.src = e.target.result;
-        // previewContainer.classList.remove("hidden");
-      };
+      reader.onload = (e) => updatePhoto(dropZone, e.target.result);
       reader.readAsDataURL(file);
     } else {
       alert("Please select a valid image file (JPG, PNG, or GIF).");
     }
   }
 
-  // Remove Image
-  removeBtn.addEventListener("click", (e) => {
+  function preventDefaults(e) {
     e.preventDefault();
-    fileInput.value = ""; // Clear input
-    updatePhoto("")
+    e.stopPropagation();
+  }
+
+  dropZones.forEach((dropZone) => {
+    const fileInput = dropZone.querySelector('input[type="file"]');
+    const removeBtn = dropZone.querySelector(".remove-img");
+
+    // Handle File Selection
+    fileInput.addEventListener("change", function (e) {
+      handleFiles(dropZone, this.files, fileInput);
+    });
+
+    // Drag and Drop Logic
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    dropZone.addEventListener("dragover", () =>
+      dropZone.classList.add("drag-over"),
+    );
+    dropZone.addEventListener("dragleave", () =>
+      dropZone.classList.remove("drag-over"),
+    );
+
+    dropZone.addEventListener("drop", (e) => {
+      dropZone.classList.remove("drag-over");
+      const files = e.dataTransfer.files;
+      fileInput.files = files; // Sync drag-dropped file to the actual input
+      handleFiles(dropZone, files, fileInput);
+    });
+
+    // Remove Image
+    removeBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      fileInput.value = ""; // Clear input
+      updatePhoto(dropZone, "");
+    });
   });
 });
+
 
 const staffForm = document.querySelector("#staff-form");
 const classField = document.querySelector("#class-field");

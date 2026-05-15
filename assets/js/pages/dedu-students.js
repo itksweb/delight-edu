@@ -22,20 +22,70 @@ const password = document.querySelector('input[type="password"]');
 const dropZones = document.querySelectorAll(".dedu-upload-container");
 const classes = deduStudentData["classes"];
 const sections = deduStudentData["sections"];
-const allParents = deduStudentData["all_parents"];
-let mode = "";
-
-const parentSelect = parentsContainer.querySelector(
+const allEntries = parentsContainer.querySelectorAll(
   ".existing-parent-selector select",
 );
+const allParents = deduStudentData["all_parents"];
+let selectedParents = [];
 
-//populate parents options
-allParents.forEach((parent) => {
-  const text = `${parent["first_name"]} ${parent["last_name"]}`;
-  const opt = creatIt("option", "", text);
-  opt.setAttribute("value", parent.id);
-  parentSelect.appendChild(opt);
-});
+
+const updateSelectedParents = (changedSelect, index) => {
+  if (changedSelect.value && !selectedParents.includes(changedSelect.value)) {
+    index === -1
+      ? selectedParents.push(changedSelect.value)
+      : (selectedParents[index] = changedSelect.value);
+    changedSelect.dataset.prev = changedSelect.value; // Update the previous value for next change
+  } else if (changedSelect.value === "" && index !== -1) {
+    selectedParents.splice(index, 1); // Remove the previously selected value from the array
+    changedSelect.dataset.prev = ""; // Reset previous value
+  }
+};
+const disableSelectedParentOptions = (select) => {
+  const options = [...select.options];
+  options.forEach((opt) => {
+    opt.removedAttribute("data-disabled"); // First, enable all options
+    if (selectedParents.includes(opt.value)) {
+      opt.setAttribute("data-disabled", "true"); // Mark as disabled
+    }
+  });
+  options.forEach((opt) => {
+    opt.disabled = selectedParents.includes(opt.value);
+  });
+};
+
+const updateParentOptions = (changedSelect) => {
+  // const select = document.getElementById("myDropdown");
+  const selectedOption = changedSelect.options[changedSelect.selectedIndex];
+
+  if (selectedOption.disabled) {
+    alert("You cannot select this option!");
+    // Optional: Reset to a valid option or clear the selection
+    // select.value = "";
+  }
+  console.log("Changed Select: ", changedSelect);
+  const prevValue = changedSelect.dataset.prev;
+  const index = selectedParents.indexOf(prevValue);
+  updateSelectedParents(changedSelect, index);
+  const allEntries = parentsContainer.querySelectorAll(
+    ".existing-parent-selector select",
+  );
+  allEntries.forEach((select) => disableSelectedParentOptions(select));
+  console.log("Selected Parents: ", selectedParents);
+};
+
+const populateParentOptions = (select, options) => {
+  options.forEach((parent) => {
+    const text = `${parent["first_name"]} ${parent["last_name"]}`;
+    const opt = creatIt("option", "", text);
+    opt.setAttribute("value", parent.id);
+    opt.addEventListener("click", (e) => {
+      if (opt.disabled) {
+        alert("This parent is already selected by you. Please choose another.");
+      }
+    });
+    select.appendChild(opt);
+  });
+};
 
 const updateParentButtonState = () => {
   const allEntries = parentsContainer.querySelectorAll(".parent-entry");
@@ -78,7 +128,7 @@ const parentModeSwitch = (par, mode = "") => {
   const existingSelector = par.querySelector(".existing-parent-selector");
   const existingParent = existingSelector.querySelector("select");
   const requiredInputs = newFields.querySelectorAll(".parent-required");
-  const newExistingToggle = par.querySelector(".parent-mode-toggle")
+  const newExistingToggle = par.querySelector(".parent-mode-toggle");
 
   if (mode === "new") {
     existingSelector.classList.add("hide-me");
@@ -88,7 +138,7 @@ const parentModeSwitch = (par, mode = "") => {
     existingParent.value = "";
     requiredInputs.forEach((input) => (input.required = true));
     newExistingToggle.classList.remove("wide");
-    par.querySelector("legend").textContent = "Parent Details"
+    par.querySelector("legend").textContent = "Parent Details";
   } else if (mode === "existing") {
     newFields.classList.add("hide-me");
     existingSelector.classList.remove("hide-me");
@@ -105,18 +155,6 @@ const parentModeSwitch = (par, mode = "") => {
     relationshipToggle.classList.add("hide-me");
     newExistingToggle.classList.add("wide");
   }
-};
-
-const displayRemoveBtn = (par, mode = "show") => {
-  mode === "show"
-    ? par.querySelector(".remove-parent-btn").classList.remove("hide-me")
-    : par.querySelector(".remove-parent-btn").classList.add("hide-me");
-};
-
-const displayParGuardTop = (par, mode = "show") => {
-  mode === "show"
-    ? par.querySelector(".dedu-parent-guardian-top").classList.remove("hide-me")
-    : par.querySelector(".dedu-parent-guardian-top").classList.add("hide-me");
 };
 
 const populateParentFields = (par, parent) => {
@@ -150,6 +188,8 @@ const renderAddNewScreen = () => {
     .querySelector(".dedu-parent-guardian-top")
     .classList.remove("hide-me");
   firstParent.querySelector(".remove-parent-btn").classList.add("hide-me");
+  const select = firstParent.querySelector(".existing-parent-selector select");
+  populateParentOptions(select, allParents);
   parentModeSwitch(firstParent);
   updateParentButtonState();
   updateUrlActionId();
@@ -233,8 +273,6 @@ const renderEditScreen = async (e) => {
     console.error("Fetch error:", error);
   } finally {
   }
-
-
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -268,7 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   dropZones.forEach((dropZone) => {
-    // console.log("wetin", dropZone);
     const fileInput = dropZone.querySelector('input[type="file"]');
     const removeBtn = dropZone.querySelector(".remove-img");
 
@@ -331,103 +368,106 @@ studentForm?.addEventListener("change", (e) => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-  
+// 1. Handle Toggles and Removal via Event Delegation
+parentsContainer.addEventListener("change", function (e) {
+  // Toggle Logic: Existing vs New
+  if (e.target && e.target.classList.contains("parent-mode-switch")) {
+    const parent = target(e, ".parent-entry");
+
+    const index = parent.dataset.index;
+    console.log(index);
+    if (e.target.value === "existing") parentModeSwitch(parent, "existing");
+    else if (e.target.value === "new") parentModeSwitch(parent, "new");
+  } else if (["father", "mother", "others"].includes(e.target.id)) {
+    const tit = target(e, ".parent-entry").querySelector("legend");
+    const input = target(e, ".relationship-toggle").querySelector(
+      ".radio-input",
+    );
+    if (e.target.id === "others") {
+      input?.classList.remove("hide-me");
+      input?.focus();
+    } else {
+      input.classList.add("hide-me");
+      tit.textContent = e.target.value.trim();
+    }
+  } else if (e.target.matches(".radio-input")) {
+    const othersBtn = target(e, ".relationship-toggle").querySelector(
+      "#others",
+    );
+    const othersLabel = othersBtn.nextElementSibling;
+    if (e.target.checkVisibility()) {
+      othersBtn.value = e.target.value.trim().toLowerCase();
+      othersLabel.textContent = e.target.value.trim();
+      const tit = target(e, ".parent-entry").querySelector("legend");
+      tit.textContent = e.target.value.trim();
+    }
+  } else if (e.target.matches(".existing-parent-selector select")) {
+    updateParentOptions(e.target);
+  }
 });
 
-// 1. Handle Toggles and Removal via Event Delegation
-  parentsContainer.addEventListener("change", function (e) {
-    // Toggle Logic: Existing vs New
-    if (e.target && e.target.classList.contains("parent-mode-switch")) {
-      const parent = target(e, ".parent-entry");
-      
-      const index = parent.dataset.index;
-      console.log(index);
-      if (e.target.value === "existing") parentModeSwitch(parent, "existing");
-      else if (e.target.value === "new") parentModeSwitch(parent, "new");
-    } else if (["father", "mother", "others"].includes(e.target.id)) {
-      const tit = target(e, ".parent-entry").querySelector("legend");
-      const input = target(e, ".relationship-toggle").querySelector(
-        ".radio-input",
+parentsContainer.addEventListener("click", function (e) {
+  // Remove Parent Logic
+  if (e.target && target(e, ".remove-parent-btn")) {
+    const entry = target(e, ".parent-entry");
+    const select = entry.querySelector(".existing-parent-selector select");
+    const index = selectedParents.indexOf(select.value);
+    entry.remove();
+    index !== -1 && selectedParents.splice(index, 1);
+    updateParentButtonState();
+    console.log("Selected Parents: ", selectedParents);
+  } else if (target(e, ".others")) {
+    // if "others" is selected/clicked display input
+    const input = target(e, ".relationship-toggle").querySelector(
+      ".radio-input",
+    );
+    input.classList.remove("hide-me");
+  } else if (
+    !target(e, ".others") &&
+    !e.target.classList.contains("radio-input")
+  ) {
+    //if click outside the input, it disappears
+    parentsContainer.querySelectorAll(".radio-input").forEach((radioInput) => {
+      if (radioInput.checkVisibility()) radioInput.classList.add("hide-me");
+    });
+  }
+});
+
+// 2. Add New Parent Logic
+addBtn.addEventListener("click", function () {
+  const allEntries = parentsContainer.querySelectorAll(".parent-entry");
+
+  if (allEntries.length < 3) {
+    const lastIndex = allEntries.length - 1;
+    const requiredInputs = allEntries[lastIndex].querySelectorAll(
+      ".existing-parent-selector select[required], .parent-fields input[required]",
+    );
+
+    const violator = [...requiredInputs].find((input) => !input.value);
+    if (violator) {
+      console.log(violator);
+      alert(
+        "Please fill out the required fields in the present parent form before adding another one.",
       );
-      if (e.target.id === "others") {
-        input?.classList.remove("hide-me");
-        input?.focus();
-      } else {
-        input.classList.add("hide-me");
-        tit.textContent = e.target.value.trim();
-      }
-    } else if (e.target.matches(".radio-input")) {
-      const othersBtn = target(e, ".relationship-toggle").querySelector(
-        "#others",
-      );
-      const othersLabel = othersBtn.nextElementSibling;
-      if (e.target.checkVisibility()) {
-        othersBtn.value = e.target.value.trim().toLowerCase();
-        othersLabel.textContent = e.target.value.trim();
-        const tit = target(e, ".parent-entry").querySelector("legend");
-        tit.textContent = e.target.value.trim();
-      }
+      return;
     }
-  });
 
-  parentsContainer.addEventListener("click", function (e) {
-    // Remove Parent Logic
-    if (e.target && e.target.closest(".remove-parent-btn")) {
-      e.target.closest(".parent-entry").remove();
-      updateParentButtonState();
-    } else if (target(e, ".others")) {
-      // if "others" is selected/clicked display input
-      const input = target(e, ".relationship-toggle").querySelector(
-        ".radio-input",
-      );
-      input.classList.remove("hide-me");
-    } else if (
-      !target(e, ".others") &&
-      !e.target.classList.contains("radio-input")
-    ) {
-      //if click outside the input, it disappears
-      parentsContainer
-        .querySelectorAll(".radio-input")
-        .forEach((radioInput) => {
-          if (radioInput.checkVisibility()) radioInput.classList.add("hide-me");
-        });
-    }
-  });
-
-  // 2. Add New Parent Logic
-  addBtn.addEventListener("click", function () {
-    const allEntries = parentsContainer.querySelectorAll(".parent-entry");
-
-    if (allEntries.length < 3) {
-      const lastIndex = allEntries.length - 1;
-      const requiredInputs = allEntries[lastIndex].querySelectorAll(
-        ".existing-parent-selector select[required], .parent-fields input[required]",
-      );
-      // console.log(requiredInputs);
-      const violator = [...requiredInputs].find((input) => !input.value);
-      if (violator) {
-        console.log(violator);
-        alert(
-          "Please fill out the required fields in the present parent form before adding another one.",
-        );
-        return;
-      }
-
-      const newParent = firstParent.cloneNode(true);
-      resetInputs(newParent, allEntries.length); // Reset and Update Inputs
-      newParent.setAttribute("data-index", allEntries.length);
-      parentModeSwitch(newParent);
-      newParent
-        .querySelector(".dedu-parent-guardian-top")
-        .classList.remove("hide-me");
-      newParent.querySelector(".remove-parent-btn").classList.remove("hide-me");
-      parentsContainer.appendChild(newParent);
-      updateParentButtonState();
-    }
-  });
+    const newParent = firstParent.cloneNode(true);
+    resetInputs(newParent, allEntries.length); // Reset and Update Inputs
+    newParent.setAttribute("data-index", allEntries.length);
+    const select = newParent.querySelector(".existing-parent-selector select");
+    disableSelectedParentOptions(select);
+    parentModeSwitch(newParent);
+    newParent
+      .querySelector(".dedu-parent-guardian-top")
+      .classList.remove("hide-me");
+    newParent.querySelector(".remove-parent-btn").classList.remove("hide-me");
+    parentsContainer.appendChild(newParent);
+    updateParentButtonState();
+  }
+});
 
 `
 Next step: remove already selected parents from the select options available so that the user doesn't select the same parents multiple times  
 
-`
+`;

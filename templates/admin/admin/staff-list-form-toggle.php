@@ -113,6 +113,7 @@ $tspan = "6"
 
             <?php 
                 $field_name = "staff_photo";
+                $sub_pix = "";
                 include("{$part}/profile-picture.php");
             ?>
             <div class="dedu-card">

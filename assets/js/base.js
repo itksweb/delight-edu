@@ -62,7 +62,6 @@ const creatIt = (tag = "span", cls = "", text = "") => {
 };
 
 const updatePhoto = (dropZone, src = "") => {
-  // console.log("wetin", dropZone)
   const previewContainer = dropZone.querySelector(".image-preview");
   const previewImg = previewContainer.querySelector("img");
   previewImg.src = src;
@@ -356,7 +355,6 @@ const customiseMultiselect = (tr = null) => {
       const expanded = btn.getAttribute("aria-expanded") === "true";
       btn.setAttribute("aria-expanded", !expanded);
       const content = btn.parentElement.querySelector("ul");
-      console.log(content);
       content.hidden = expanded;
     });
   });

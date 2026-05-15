@@ -56,6 +56,7 @@ const renderEditScreen = (e) => {
   const data = target(e, ".dedu-edit-icon").dataset;
   const { id } = data;
   addRowBtn.dataset.id = id;
+  formTitle.textContent = `Manage Subjects for ${data.name}`;
   document.querySelector(`input[name="class_id"]`).value = id;
   let curriculum = data.curriculum ? JSON.parse(data.curriculum) : [];
   subjectRows.replaceChildren();
