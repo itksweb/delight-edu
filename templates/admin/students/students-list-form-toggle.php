@@ -104,64 +104,66 @@ $tspan = "6"
             <?php wp_nonce_field('dedu_student_nonce'); ?>
 
             
-            <?php 
-                $field_name = "student_photo";
-                $sub_pix = "";
-                include("{$part}/profile-picture.php");
-            ?>
-            <div class="dedu-card">
-                <fieldset class = "fields-group perseonal-details">
-                    <legend class = "dedu-card-title">Personal Details</legend>
-                    <div class = "unit">
-                        <label>First Name*</label>
-                        <input type="text" name="first_name" class="large-text" required>
-                    </div>
-                    <div class = "unit">
-                        <label>Middle Name*</label>
-                        <input type="text" name="middle_name" class="large-text">
-                    </div>
-                    <div class = "unit">
-                        <label>Last Name*</label>
-                        <input type="text" name="last_name" class="large-text" required>
-                    </div>
-                    <div class = "unit">
-                        <label>Gender</label>
-                        <select name="gender" class="large-text">
-                            <?php foreach ($form_meta['genders'] as $k => $v) : ?>
-                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class = "unit">
-                        <label>Marital Status</label>
-                        <select name="marital_status" class="large-text">
-                            <?php foreach ($form_meta['marital_statuses'] as $k => $v) : ?>
-                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class = "unit">
-                        <label>Blood Group</label>
-                        <select name="blood_group" class="large-text">
-                            <?php foreach ($form_meta['blood_group'] as $k => $v) : ?>
-                                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class = "unit">
-                        <label>Date of Birth</label>
-                        <input type="date" name="date_of_birth" class="large-text">
-                    </div>   
-                    <div class = "unit">
-                        <label>Address</label>
-                        <input type="text" name="address" class="large-text" required>
-                    </div>              
-                </fieldset>
+            <div class="personal-details">
+                <?php 
+                    $field_name = "student_photo";
+                    $sub_pix = "";
+                    include("{$part}/profile-picture.php");
+                ?>
+                <div class="dedu-card">        
+                    <fieldset class = "fields-group">
+                        <legend class = "dedu-card-title"><h2>Personal Details</h2></legend>
+                        <div class = "unit">
+                            <label>First Name*</label>
+                            <input type="text" name="first_name" class="large-text" required>
+                        </div>
+                        <div class = "unit">
+                            <label>Middle Name*</label>
+                            <input type="text" name="middle_name" class="large-text">
+                        </div>
+                        <div class = "unit">
+                            <label>Last Name*</label>
+                            <input type="text" name="last_name" class="large-text" required>
+                        </div>
+                        <div class = "unit">
+                            <label>Gender</label>
+                            <select name="gender" class="large-text">
+                                <?php foreach ($form_meta['genders'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Marital Status</label>
+                            <select name="marital_status" class="large-text">
+                                <?php foreach ($form_meta['marital_statuses'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Blood Group</label>
+                            <select name="blood_group" class="large-text">
+                                <?php foreach ($form_meta['blood_group'] as $k => $v) : ?>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class = "unit">
+                            <label>Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="large-text">
+                        </div>   
+                        <div class = "unit">
+                            <label>Address</label>
+                            <input type="text" name="address" class="large-text" required>
+                        </div>              
+                    </fieldset>
+                </div>
             </div>
 
             <div class="dedu-card">
                 <fieldset class = "fields-group school-details">
-                    <legend class = "dedu-card-title">School Detail</legend>
+                    <legend class = "dedu-card-title"><h2>School Detail</h2></legend>
                     <div class = "unit">
                         <label>Joining Date</label>
                         <input type="date" name="joining_date" class="large-text" value="<?php echo date('Y-m-d'); ?>">
@@ -190,7 +192,7 @@ $tspan = "6"
 
             <div class="dedu-card">
                 <fieldset class = "fields-group user-account">
-                    <legend class = "dedu-card-title">Account</legend>
+                    <legend class = "dedu-card-title"><h2>Account</h2></legend>
                     <div class = "unit">
                         <label>Email (Login Username)*</label>
                         <input type="email" name="email" class="large-text" required>
@@ -228,19 +230,19 @@ $tspan = "6"
                                     <input type="radio" name="parents[0][mode]" value="existing" class="parent-mode-switch" required> Select Existing Parent
                                 </label>
                             </div>
-                            <div class="relationship-toggle" >
+                            <div class="rel-switch" >
                                 <span class="labels">
                                     <?php foreach ($form_meta['relationship'] as $k => $v) : ?>
                                         <label data-id="<?php echo $k; ?>" class="<?php echo $k; ?>" >
-                                            <input type="radio" name="parents[0][relationship]" value="<?php echo $k; ?>" id = "<?php echo $k; ?>" required> 
+                                            <input type="radio" name="parents[0][relationship]" value="<?php echo $k; ?>" class = "<?php echo "{$k}-btn input-rel"; ?>" required> 
                                             <span class="lab" ><?php echo $v; ?></span> 
                                         </label>
-                                    <?php endforeach; ?>
+                                    <?php endforeach;  ?>
                                 </span>
                                 
                                 <input type="text" class="radio-input hide-me">
                             </div>
-                                <!-- Existing Parent Search (Hidden by default) -->
+                            <!-- Existing Parent Search (Hidden by default) -->
                             <div class="unit existing-parent-selector hide-me">
                                 <label>Search Existing Parent (Phone or Email)</label>
                                 <select name="parents[0][existing_id]" data-prev = "" required>
@@ -331,7 +333,10 @@ $tspan = "6"
 <style>
     .perseonal-details{
         position: relative;
-        margin-top: 50px;
+        
+        .fields-group legend {
+            margin-bottom: 50px;
+        }
     }
 
     #parents-container {
@@ -339,7 +344,6 @@ $tspan = "6"
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
             border-bottom: 1px solid #eee;
 
             h2 { margin:0; }
@@ -367,7 +371,7 @@ $tspan = "6"
                     align-items: flex-start;
                     flex-wrap: wrap;
                 }
-                .relationship-toggle {
+                .rel-switch {
                     display: grid;
                     gap: 20px;
                     align-items: flex-end;
@@ -380,7 +384,7 @@ $tspan = "6"
                         column-gap: 10px;
                     }       
                 }
-                .relationship-toggle.hide-me {
+                .rel-switch.hide-me {
                     display: none !important;
                 }
 

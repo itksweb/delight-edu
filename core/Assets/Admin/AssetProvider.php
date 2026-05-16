@@ -27,6 +27,10 @@ class AssetProvider {
         global $wpdb;
         $table_parents = $wpdb->prefix . 'dedu_parents';
         $all_parents = $wpdb->get_results("SELECT * FROM $table_parents ORDER BY first_name ASC");
+        foreach ($all_parents as $par) {
+            $photo_url = isset($par->profile_picture_id) ? wp_get_attachment_url($par->profile_picture_id) : '';
+            $par->photo_url = $photo_url;
+        }
         return $all_parents;
     }
 

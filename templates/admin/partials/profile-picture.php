@@ -26,9 +26,10 @@
 
 <style>
     .dedu-upload-container {
-        transform: translateY(80px);
+        transform: translateY(20px);
         margin: 0 auto;
         margin-top:-80px ;
+        margin-bottom: -40px;
         border-radius: 50%;
         width: 200px;
         height: 200px;

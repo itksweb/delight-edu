@@ -28,40 +28,22 @@ const allEntries = parentsContainer.querySelectorAll(
 const allParents = deduStudentData["all_parents"];
 let selectedParents = [];
 
-
-const updateSelectedParents = (changedSelect, index) => {
-  if (changedSelect.value && !selectedParents.includes(changedSelect.value)) {
-    index === -1
-      ? selectedParents.push(changedSelect.value)
-      : (selectedParents[index] = changedSelect.value);
-    changedSelect.dataset.prev = changedSelect.value; // Update the previous value for next change
-  } else if (changedSelect.value === "" && index !== -1) {
-    selectedParents.splice(index, 1); // Remove the previously selected value from the array
-    changedSelect.dataset.prev = ""; // Reset previous value
-  }
-};
-const disableSelectedParentOptions = (select) => {
+const disableOptions = (select, toBeDisabled, storedParents = []) => {
+  const itemsToDisable = [...toBeDisabled, ...storedParents];
   const options = [...select.options];
-  options.forEach((opt) => {
-    opt.disabled = false; // Enable all options first
-    if (selectedParents.includes(opt.value)) {
-      opt.disabled = true; // Disable options that are already selected
-    }
-  });
-  
+  options.forEach((opt) => (opt.disabled = itemsToDisable.includes(opt.value)));
 };
 
-const updateParentOptions = (changedSelect) => {
-  const prevValue = changedSelect.dataset.prev;
-  const index = selectedParents.indexOf(prevValue);
-  console.log( "Index: ", index );
-  updateSelectedParents(changedSelect, index);
+const updateParentOptions = () => {
   const allEntries = parentsContainer.querySelectorAll(
     ".existing-parent-selector select",
   );
-  allEntries.forEach((select) => disableSelectedParentOptions(select));
+  // Update selectedParents based on current selections
+  selectedParents = [...allEntries]
+    .map((select) => select.value)
+    .filter((val) => val);
   console.log("Selected Parents: ", selectedParents);
-  
+  allEntries.forEach((select) => disableOptions(select, selectedParents));
 };
 
 const populateParentOptions = (select, options) => {
@@ -110,7 +92,7 @@ const resetInputs = (par = document, i = 0) => {
 
 const parentModeSwitch = (par, mode = "") => {
   const newFields = par.querySelector(".parent-fields");
-  const relationshipToggle = par.querySelector(".relationship-toggle");
+  const relationshipToggle = par.querySelector(".rel-switch");
   const existingSelector = par.querySelector(".existing-parent-selector");
   const existingParent = existingSelector.querySelector("select");
   const requiredInputs = newFields.querySelectorAll(".parent-required");
@@ -143,24 +125,28 @@ const parentModeSwitch = (par, mode = "") => {
   }
 };
 
-const populateParentFields = (par, parent) => {
-  par.querySelector("legend").textContent = parent["relationship"]
-    ? parent["relationship"]
-    : "";
-  const dropZone = par.querySelector(".sub-pix");
-  dropZone.style.transform = "translateY(10px)";
-  const parentInputs = par.querySelectorAll("input, select, textarea");
-  parentInputs.forEach((input) => {
+const populateFields = (form, data) => {
+  // const dropZone = form.querySelector(".sub-pix");
+  // dropZone.style.transform = "translateY(10px)";
+  const inputs = form.querySelectorAll("input, select, textarea");
+  inputs.forEach((input) => {
     if (input.name) {
-      const key = input.name.split("][")[1].slice(0, -1);
-      if (key !== "profile_photo") {
-        input.value = parent[key] ? parent[key] : "";
-      } else if (key === "profile_photo" && parent[key]) {
-        updatePhoto(dropZone, parent[key]);
-      }
+      const parField = input.name.startsWith("parents[");
+      const key = parField
+        ? input.name.split("][")[1].slice(0, -1)
+        : input.name;
+      if (!key.endsWith("_photo")) {
+        input.value = data[key] ? data[key] : "";
+      } 
+      
     }
   });
 };
+
+
+const studentForm = document.querySelector("#student-form");
+const classField = document.querySelector("#class-field");
+const sectionsField = document.querySelector("#sections-field");
 
 const renderAddNewScreen = () => {
   formTitle.textContent = `Add A New ${itemType}`;
@@ -210,21 +196,26 @@ const renderEditScreen = async (e) => {
 
       // Populate Basic Fields
       formTitle.textContent = `Edit student: ${student.first_name} ${student.last_name}`;
-      wpUser.value = student.user_id;
       updatePhoto(pixZone, student.photo_url);
-      fname.value = student.first_name;
-      mname.value = student.middle_name || "";
-      lname.value = student.last_name;
-      email.value = student.email;
-      phone.value = student.phone || "";
-      admissionNumber.value = student["admission_no"] || "";
-      joiningDate.value = student.joining_date;
-      dob.value = student.date_of_birth;
-      classId.value = student.class_id;
-      sectionId.value = student.section_id || "";
-      address.value = student.address || "";
-      submitBtn.textContent = "Update student";
+      
+      // wpUser.value = student.user_id;
+      // fname.value = student.first_name;
+      // mname.value = student.middle_name || "";
+      // lname.value = student.last_name;
+      // email.value = student.email;
+      // phone.value = student.phone || "";
+      // admissionNumber.value = student.admission_no || "";
+      // joiningDate.value = student.joining_date;
+      // dob.value = student.date_of_birth;
+      // classId.value = student.class_id;
+      // sectionId.value = student.section_id || "";
+      // address.value = student.address || "";
+      const studFields = document.querySelector(".personal-details");
+      // console.log(studFields)
+      populateFields(studentForm, student );
 
+      submitBtn.textContent = "Update student";
+      
       // get student's parents from all parents
       const studentParents = allParents.filter((par) =>
         parents.includes(par.id),
@@ -238,17 +229,25 @@ const renderEditScreen = async (e) => {
         studentParents.forEach((parent, i) => {
           if (+firstParent.dataset.index === i) {
             parentModeSwitch(firstParent, "new");
-            populateParentFields(firstParent, parent);
+            populateFields(firstParent, parent);
           } else {
             const newParent = firstParent.cloneNode(true);
             resetInputs(newParent, i);
-            populateParentFields(newParent, parent);
+            newParent.setAttribute("data-index", i);
+            populateFields(newParent, parent);
+            const select = newParent.querySelector(
+              ".existing-parent-selector select",
+            );
+            disableOptions(select, selectedParents, parents);
+            parentModeSwitch(newParent, "new");
+            newParent
+              .querySelector(".remove-parent-btn")
+              .classList.remove("hide-me");
             parentsContainer.appendChild(newParent);
           }
         });
       }
       updateParentButtonState();
-
       updateUrlActionId(student.id);
       updateHiddenInput(student.id);
       showFormView();
@@ -328,9 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-const studentForm = document.querySelector("#student-form");
-const classField = document.querySelector("#class-field");
-const sectionsField = document.querySelector("#sections-field");
+
 
 studentForm?.addEventListener("change", (e) => {
   if (e.target === classField) {
@@ -354,58 +351,18 @@ studentForm?.addEventListener("change", (e) => {
   }
 });
 
-// 1. Handle Toggles and Removal via Event Delegation
-parentsContainer.addEventListener("change", function (e) {
-  // Toggle Logic: Existing vs New
-  if (e.target && e.target.classList.contains("parent-mode-switch")) {
-    const parent = target(e, ".parent-entry");
-
-    const index = parent.dataset.index;
-    if (e.target.value === "existing") parentModeSwitch(parent, "existing");
-    else if (e.target.value === "new") parentModeSwitch(parent, "new");
-  } else if (["father", "mother", "others"].includes(e.target.id)) {
-    const tit = target(e, ".parent-entry").querySelector("legend");
-    const input = target(e, ".relationship-toggle").querySelector(
-      ".radio-input",
-    );
-    if (e.target.id === "others") {
-      input?.classList.remove("hide-me");
-      input?.focus();
-    } else {
-      input.classList.add("hide-me");
-      tit.textContent = e.target.value.trim();
-    }
-  } else if (e.target.matches(".radio-input")) {
-    const othersBtn = target(e, ".relationship-toggle").querySelector(
-      "#others",
-    );
-    const othersLabel = othersBtn.nextElementSibling;
-    if (e.target.checkVisibility()) {
-      othersBtn.value = e.target.value.trim().toLowerCase();
-      othersLabel.textContent = e.target.value.trim();
-      const tit = target(e, ".parent-entry").querySelector("legend");
-      tit.textContent = e.target.value.trim();
-    }
-  } else if (e.target.matches(".existing-parent-selector select")) {
-    updateParentOptions(e.target);
-  }
-});
-
 parentsContainer.addEventListener("click", function (e) {
   // Remove Parent Logic
   if (e.target && target(e, ".remove-parent-btn")) {
     const entry = target(e, ".parent-entry");
     const select = entry.querySelector(".existing-parent-selector select");
-    const index = selectedParents.indexOf(select.value);
+    selectedParents = selectedParents.filter((id) => id !== select.value);
     entry.remove();
-    index !== -1 && selectedParents.splice(index, 1);
-    updateParentButtonState();
     console.log("Selected Parents: ", selectedParents);
+    updateParentButtonState();
   } else if (target(e, ".others")) {
     // if "others" is selected/clicked display input
-    const input = target(e, ".relationship-toggle").querySelector(
-      ".radio-input",
-    );
+    const input = target(e, ".rel-switch").querySelector(".radio-input");
     input.classList.remove("hide-me");
   } else if (
     !target(e, ".others") &&
@@ -415,6 +372,41 @@ parentsContainer.addEventListener("click", function (e) {
     parentsContainer.querySelectorAll(".radio-input").forEach((radioInput) => {
       if (radioInput.checkVisibility()) radioInput.classList.add("hide-me");
     });
+  }
+});
+
+// 1. Handle Toggles and Removal via Event Delegation
+parentsContainer.addEventListener("change", function (e) {
+  if (e.target.matches(".parent-mode-switch")) {
+    // toggle between "new"  & "existng" parent entry
+    const parent = target(e, ".parent-entry");
+    if (e.target.value === "existing") {
+      parentModeSwitch(parent, "existing");
+    } else if (e.target.value === "new") {
+      parentModeSwitch(parent, "new");
+    }
+  } else if (
+    e.target.matches(".input-rel") ||
+    e.target.matches(".radio-input")
+  ) {
+    // parent-student relationship switch
+    const parentNewTitle = target(e, ".parent-entry").querySelector("legend");
+    const othersBtn = target(e, ".rel-switch").querySelector(".others-btn");
+    const input = target(e, ".rel-switch").querySelector(".radio-input");
+    if (["mother", "father"].includes(e.target.value)) {
+      input.classList.add("hide-me");
+      parentNewTitle.textContent = e.target.value.trim();
+    } else if (e.target.matches(".radio-input")) {
+      const othersLabel = othersBtn.nextElementSibling;
+      othersBtn.value = e.target.value.trim().toLowerCase();
+      othersLabel.textContent = e.target.value.trim();
+      parentNewTitle.textContent = e.target.value.trim();
+    } else if (e.target.matches(".others-btn")) {
+      input.classList.remove("hide-me");
+      input.focus();
+    }
+  } else if (e.target.matches(".existing-parent-selector select")) {
+    updateParentOptions();
   }
 });
 
@@ -441,7 +433,7 @@ addBtn.addEventListener("click", function () {
     resetInputs(newParent, allEntries.length); // Reset and Update Inputs
     newParent.setAttribute("data-index", allEntries.length);
     const select = newParent.querySelector(".existing-parent-selector select");
-    disableSelectedParentOptions(select);
+    disableOptions(select, selectedParents);
     parentModeSwitch(newParent);
     newParent
       .querySelector(".dedu-parent-guardian-top")
@@ -451,8 +443,3 @@ addBtn.addEventListener("click", function () {
     updateParentButtonState();
   }
 });
-
-`
-Next step: remove already selected parents from the select options available so that the user doesn't select the same parents multiple times  
-
-`;
