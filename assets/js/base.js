@@ -17,6 +17,10 @@ const todaysDate = () => {
   return date.toISOString().split("T")[0];
 };
 
+const isObjectEmpty = (obj) => {
+  return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
+};
+
 /*=========================================
         ==>  TOAST NOTIFICATION  
 ==========================================*/
