@@ -100,14 +100,34 @@ class StudentModel {
         $user_id = isset($_POST['wp_user_id']) ? absint($_POST['wp_user_id']): null;
         $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
         $data = $sanitized_data[0];
-
-        return $wpdb->update(
-            $this->table,
-            $data,
+        $done = $wpdb->update($this->table, $data, 
             ['id' => $student_id], // The WHERE clause
             null,          // Format (auto-detected usually)
             ['%d']         // Format of the WHERE clause
         );
+
+        $parent_data = $_POST['parents'];
+        $parent_model = new ParentModel();
+        $student_parent_model = new StudentParentModel();
+        foreach($parent_data as $parent){
+            if (isset($parent['mode'])) {
+                $parent_id = $parent['mode'] === "existing" 
+                    ? absint($parent['existing_id'])
+                    : $parent_model->create($parent);
+                if ($parent_id ) {
+                    $relationship = isset($parent['relationship']) ? $parent['relationship']: "";
+                    $student_parent_model->link($student_id, $parent_id, $relationship);
+                }
+            } else {
+                $parent_id = isset($parent['parent_id']) ? $parent['parent_id'] : null;
+                if ($parent_id) {
+                    $parent_model->update($parent_id, $parent);
+                }
+            }
+            
+        }
+
+        return $done;
     }
 
     public function delete( $id ) {

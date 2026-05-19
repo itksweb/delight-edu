@@ -254,6 +254,7 @@ $tspan = "6"
                     </div>
                     <!-- New Parent Fields -->
                     <div class="parent-fields hide-me">
+                        <input type="hidden" name="parents[0][wp_user_id]" value="">
                         <?php 
                             $field_name = "parents[0][profile_photo]";
                             $sub_pix = "sub-pix";

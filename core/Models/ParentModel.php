@@ -26,6 +26,7 @@ class ParentModel {
         ];
     }
 
+
     public function create($data) {
         global $wpdb;
 
@@ -56,6 +57,17 @@ class ParentModel {
         $inserted =  $wpdb->insert( $this->table, $data, $formats );
 
         return $inserted ? $wpdb->insert_id : false;
+    }
+
+    public function update($parent_id, $data) {
+        global $wpdb;
+
+        $schema = $this->get_parent_schema();
+        $photoKey = !isset($data['profile_photo']) ? 'profile_photo':'';
+        $user_id = isset($data['wp_user_id']) ? absint($data['wp_user_id']): null;
+        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey, $data);
+
+        return $wpdb->update($this->table, $sanitized_data[0], ['id' => $parent_id], null, ['%d']);
     }
 
     public function get_all() {
