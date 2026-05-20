@@ -21,7 +21,15 @@ let sectionId = null;
 const disableOptions = (select, selected = [], storedParents = []) => {
   const toBeDisabled = [...selected, ...storedParents];
   const options = [...select.options];
-  options.forEach((opt) => (opt.disabled = toBeDisabled.includes(opt.value)));
+  options.forEach((opt) => {
+    if (toBeDisabled.includes(opt.value)) {
+      // opt.disabled = true;
+      opt.classList.add("hide-me");
+    } else {
+      // opt.disabled = false;
+      opt.classList.remove("hide-me");
+    }
+  });
 };
 
 const updateParentOptions = () => {
