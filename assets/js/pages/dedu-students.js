@@ -19,16 +19,12 @@ let storedParents = [];
 let sectionId = null;
 
 const disableOptions = (select, selected = [], storedParents = []) => {
-  const toBeDisabled = [...selected, ...storedParents];
+  const toBeHidden = [...selected, ...storedParents];
   const options = [...select.options];
   options.forEach((opt) => {
-    if (toBeDisabled.includes(opt.value)) {
-      // opt.disabled = true;
-      opt.classList.add("hide-me");
-    } else {
-      // opt.disabled = false;
-      opt.classList.remove("hide-me");
-    }
+    toBeHidden.includes(opt.value)
+      ? opt.classList.add("hide-me")
+      : opt.classList.remove("hide-me");
   });
 };
 
@@ -41,12 +37,12 @@ const updateParentOptions = () => {
     .map((select) => select.value)
     .filter((val) => val);
 
-  allEntries.forEach((select) =>{
+  allEntries.forEach((select) => {
     disableOptions(
       select,
       selectedParents.filter((id) => id !== select.value),
       storedParents,
-    );    
+    );
   });
   console.log("Selected Parents: ", selectedParents);
 };
@@ -386,7 +382,7 @@ parentsContainer.addEventListener("click", function (e) {
     const entry = target(e, ".parent-entry");
     const select = entry.querySelector(".existing-parent-selector select");
     entry.remove();
-    updateParentOptions()
+    updateParentOptions();
     updateParentButtonState();
   } else if (target(e, ".others")) {
     // if "others" is selected/clicked display input
@@ -413,7 +409,9 @@ addBtn.addEventListener("click", function () {
       const prevEntry = allEntries[lastIndex];
       const formTop = prevEntry.querySelector(".dedu-parent-guardian-top");
       if (formTop) {
-        const requiredSelect = formTop.querySelector(".existing-parent-selector select[required]");
+        const requiredSelect = formTop.querySelector(
+          ".existing-parent-selector select[required]",
+        );
         if (requiredSelect && !requiredSelect.value) {
           alert("Please select an existing parent before adding another.");
           return;
@@ -425,15 +423,16 @@ addBtn.addEventListener("click", function () {
           ".rel-switch input[type='radio']",
         ).required;
         if (relRequired && !relSelected) {
-          alert("Please specify the relationship for the new parent before adding another.");
+          alert(
+            "Please specify the relationship for the new parent before adding another.",
+          );
           return;
         }
       }
 
       const requiredInputs = prevEntry.querySelectorAll(
-        ".parent-fields input[required]"
+        ".parent-fields input[required]",
       );
-      ;
       if ([...requiredInputs].find((input) => !input.value)) {
         alert(
           "Please fill out the required fields before adding another parent.",
