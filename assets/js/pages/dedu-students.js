@@ -32,10 +32,10 @@ const updateParentOptions = () => {
   selectedParents = [...allEntries]
     .map((select) => select.value)
     .filter((val) => val);
-  console.log("Selected Parents: ", selectedParents);
   allEntries.forEach((select) =>
     disableOptions(select, selectedParents, storedParents),
   );
+  console.log("Selected Parents: ", selectedParents);
 };
 
 const populateParentOptions = (select, options) => {
@@ -57,7 +57,6 @@ function handleFiles(dropZone, files, fileInput) {
   if (!files || files.length === 0) {
     return; // Exit early if no file is selected
   }
-  console.log("file available", dropZone);
   const file = files[0];
 
   const MAX_SIZE = 2 * 1024 * 1024; // 2MB
@@ -161,11 +160,11 @@ const parentModeSwitch = (par, mode = "") => {
       par.querySelector("legend").textContent = "Parent Details";
     } else if (mode === "existing") {
       newFields.classList.add("hide-me");
-      existingSelector?.classList.remove("hide-me");
-      relationshipToggle?.classList.add("hide-me");
-      existingParent.required = true;
+      existingSelector.classList.remove("hide-me");
+      relationshipToggle.classList.add("hide-me");
       requiredInputs.forEach((input) => (input.required = false));
       relInputs.forEach((input) => (input.required = false));
+      existingParent.required = true;
       newExistingToggle?.classList.remove("wide");
       newFields
         .querySelectorAll("input, select, textarea")
@@ -375,7 +374,6 @@ parentsContainer.addEventListener("click", function (e) {
     const select = entry.querySelector(".existing-parent-selector select");
     selectedParents = selectedParents.filter((id) => id !== select.value);
     entry.remove();
-    console.log("Selected Parents: ", selectedParents);
     updateParentButtonState();
   } else if (target(e, ".others")) {
     // if "others" is selected/clicked display input
@@ -399,17 +397,31 @@ addBtn.addEventListener("click", function () {
   if (allEntries.length < 3) {
     if (allEntries.length > 0) {
       const lastIndex = allEntries.length - 1;
-      const requiredInputs = allEntries[lastIndex].querySelectorAll(
-        `.existing-parent-selector select[required], .parent-fields input[required]`
+      const prevEntry = allEntries[lastIndex];
+      const formTop = prevEntry.querySelector(".dedu-parent-guardian-top");
+      if (formTop) {
+        const requiredSelect = formTop.querySelector(".existing-parent-selector select[required]");
+        if (requiredSelect && !requiredSelect.value) {
+          alert("Please select an existing parent before adding another.");
+          return;
+        }
+        const relSelected = prevEntry.querySelector(
+          ".rel-switch input[type='radio']:checked",
+        );
+        const relRequired = prevEntry.querySelector(
+          ".rel-switch input[type='radio']",
+        ).required;
+        if (relRequired && !relSelected) {
+          alert("Please specify the relationship for the new parent before adding another.");
+          return;
+        }
+      }
+
+      const requiredInputs = prevEntry.querySelectorAll(
+        ".parent-fields input[required]"
       );
-      const relSelected = allEntries[lastIndex].querySelector(".rel-switch input[type='radio']:checked");
-      const relRequired = allEntries[lastIndex].querySelector(
-        ".rel-switch input[type='radio']").required;
-        const badRel = relRequired && !relSelected;
-      // console.log("Required Inputs: ", requiredInputs);
-      
-      const violator = badRel || [...requiredInputs].find((input) => !input.value);
-      if (violator) {
+      ;
+      if ([...requiredInputs].find((input) => !input.value)) {
         alert(
           "Please fill out the required fields before adding another parent.",
         );
@@ -435,4 +447,21 @@ addBtn.addEventListener("click", function () {
     parentsContainer.appendChild(newParent);
     updateParentButtonState();
   }
+});
+
+document.querySelector("form").addEventListener("submit", function (e) {
+  // Stop the form from redirecting/refreshing the page immediately
+  e.preventDefault();
+
+  // 1. Gather all the inputs from the form
+  const formData = new FormData(this);
+
+  // 2. Convert it to a clean object for the console
+  const formProps = Object.fromEntries(formData);
+
+  console.log("--- FORM DATA SUBMITTING ---");
+  console.dir(formProps);
+
+  // Optional: If you are using standard AJAX, you can trigger it here:
+  // myAjaxSubmitFunction(formData);
 });

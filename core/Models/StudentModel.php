@@ -106,7 +106,8 @@ class StudentModel {
             ['%d']         // Format of the WHERE clause
         );
 
-        $parent_data = $_POST['parents'];
+        if ($done) {
+            $parent_data = $_POST['parents'];
         $parent_model = new ParentModel();
         $student_parent_model = new StudentParentModel();
         foreach($parent_data as $parent){
@@ -125,6 +126,7 @@ class StudentModel {
                 }
             }
             
+        }
         }
 
         return $done;

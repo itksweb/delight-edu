@@ -26,7 +26,6 @@ class ParentModel {
         ];
     }
 
-
     public function create($data) {
         global $wpdb;
 
