@@ -32,9 +32,14 @@ const updateParentOptions = () => {
   selectedParents = [...allEntries]
     .map((select) => select.value)
     .filter((val) => val);
-  allEntries.forEach((select) =>
-    disableOptions(select, selectedParents, storedParents),
-  );
+
+  allEntries.forEach((select) =>{
+    disableOptions(
+      select,
+      selectedParents.filter((id) => id !== select.value),
+      storedParents,
+    );    
+  });
   console.log("Selected Parents: ", selectedParents);
 };
 
@@ -372,8 +377,8 @@ parentsContainer.addEventListener("click", function (e) {
   if (e.target && target(e, ".remove-parent-btn")) {
     const entry = target(e, ".parent-entry");
     const select = entry.querySelector(".existing-parent-selector select");
-    selectedParents = selectedParents.filter((id) => id !== select.value);
     entry.remove();
+    updateParentOptions()
     updateParentButtonState();
   } else if (target(e, ".others")) {
     // if "others" is selected/clicked display input
