@@ -3,6 +3,7 @@ namespace DelightEDU\Controllers\Admin\Submenus;
 
 use DelightEDU\Controllers\Admin\Academics\ClassSectionController;
 use DelightEDU\Controllers\Admin\Academics\SubjectsController;
+use DelightEDU\Controllers\Admin\Academics\AttendanceController;
 
 class AcademicSubmenus {
 
@@ -48,7 +49,7 @@ class AcademicSubmenus {
                 'p-title'    => __('Class Attendance', 'delight-edu'),
                 'm-title'    => __('Class Attendance', 'delight-edu'),
                 'slug'     => 'dedu-class-attendance',
-                'callback' => [$this, 'render_academic_dashboard']
+                'callback' => [new AttendanceController(), 'render_attendance_page']
             ],
             [
                 'p-title'    => __('Student Leave', 'delight-edu'),

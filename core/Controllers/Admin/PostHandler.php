@@ -6,6 +6,8 @@ use DelightEDU\Controllers\Admin\Academics\SubjectsController;
 use DelightEDU\Controllers\Admin\Admin\StaffController;
 use DelightEDU\Controllers\Admin\Admin\RolesController;
 use DelightEDU\Controllers\Admin\Students\StudentsController;
+use DelightEDU\Controllers\Admin\MainRoot\SessionController;
+use DelightEDU\Controllers\Admin\MainRoot\TermController;
 
 class PostHandler {
 
@@ -51,6 +53,18 @@ class PostHandler {
         add_action( 'admin_post_dedu_delete_student', [ new StudentsController(), 'handle_delete_student' ] );
         // If you want it to work for logged-out users (rare for admin forms):
         // add_action('admin_post_nopriv_dedu_save_student', [$this, 'handle_save_student']);
+
+        /*==========================================
+          ==>  SESSION MODULE HOOKS  
+        ==========================================*/
+        add_action( 'admin_post_dedu_save_session', [ new SessionController(), 'handle_save_session' ] );
+        add_action( 'admin_post_dedu_delete_session', [ new SessionController(), 'handle_delete_session' ] );
+
+        /*==========================================
+          ==>  TERM MODULE HOOKS  
+        ==========================================*/
+        add_action( 'admin_post_dedu_save_term', [ new TermController(), 'handle_save_term' ] );
+        add_action( 'admin_post_dedu_delete_term', [ new TermController(), 'handle_delete_term' ] );
     }
 
     

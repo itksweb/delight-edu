@@ -45,8 +45,8 @@ class StudentsController {
         }
         
         $model = $this->model;
-        $student_id = isset($_POST['student_db_id']) ? absint($_POST['student_db_id']) : 0;
-
+        $student_id = isset($_POST['student_id']) ? absint($_POST['student_id']) : 0;
+        error_log("student with ID: " . $student_id);
         if ($student_id > 0) {
             //UPDATE EXISTING
             $success = $model->update($student_id);
@@ -61,7 +61,6 @@ class StudentsController {
         $referer = wp_get_referer();
 
         if ( $success ) {
-            // If we have a referer, add the message to it; otherwise, use a default
             $redirect_url = $referer ? add_query_arg( 'message', $message, $referer ) : admin_url( 'admin.php?page=dedu-student&message=' . $message );
             wp_redirect( $redirect_url );
         } else {
@@ -69,7 +68,7 @@ class StudentsController {
         }
         exit;
     }
-
+    
     public function handle_delete_student(){
         $id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
 

@@ -44,11 +44,7 @@ class StaffRole {
         return $role_id;
     }
 
-    /**
-     * Delete a role by ID
-     * * @param int $id The role ID to delete
-     * @return bool True on success, false on failure
-     */
+    
     public function delete( $id ) {
         global $wpdb;
 

@@ -14,6 +14,7 @@ $tspan = "6"
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">students Management</h1>
     </div>
+    
     <div class="dedu-card" id="dedu-list-view">
         <?php include("{$part}/tab-list-header.php") ?>
         <?php include("{$part}/table-top.php") ?>
@@ -203,7 +204,7 @@ $tspan = "6"
                     </div>
                     <div class = "unit">
                         <label>Phone Number</label>
-                        <input type="text" name="phone" class="large-text">
+                        <input type="number" name="phone" class="large-text">
                     </div>
                 </fieldset>
             </div>
@@ -312,7 +313,7 @@ $tspan = "6"
                             </div>
                             <div class = "unit">
                                 <label>Phone Number</label>
-                                <input type="text" name="parents[0][phone]" class="">
+                                <input type="number" name="parents[0][phone]" class="">
                             </div>            
                         </fieldset>
                     </div>

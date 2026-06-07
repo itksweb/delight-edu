@@ -18,7 +18,7 @@ class RolesController {
         
     }    
 
-     public function save_staff_role() {
+    public function save_staff_role() {
         // 1. Security Check
         if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'dedu_role_nonce' ) ) {
             wp_die( 'Security check failed.' );

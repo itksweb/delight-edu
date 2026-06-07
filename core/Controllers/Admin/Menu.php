@@ -16,6 +16,7 @@ class Menu {
         add_action( 'admin_menu', [ $this, 'register_menus' ] );
         add_action( 'admin_notices', [ $this, 'display_global_toast' ] ); 
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+        
     }
 
     public function register_menus() {
@@ -60,8 +61,7 @@ class Menu {
                 'callback' => [new ExamSubmenus(), 'render_exam_dashboard'],
                 'icon' => 'dashicons-book-alt', 
                 'priority' => 28
-            ],
-            
+            ],  
         ];
 
         foreach ( $submenus as $sub ) {
@@ -90,6 +90,11 @@ class Menu {
 
         // 2. Extract message or error keys
         $message_key = isset( $_GET['message'] ) ? sanitize_text_field( $_GET['message'] ) : '';
+
+        //I added this block
+        if ( empty( $message_key )) {
+            $message_key = isset( $_GET['settings-updated'] ) ? 'settings-updated' :'';
+        }
         $error_key   = isset( $_GET['error'] ) ? sanitize_text_field( $_GET['error'] ) : '';
 
         if ( empty( $message_key ) && empty( $error_key ) ) {
@@ -117,6 +122,10 @@ class Menu {
             'student_created'    => 'Student created successfully.',
             'student_deleted'    => 'Student deleted successfully.',
             'student_updated'    => 'Student updated successfully.',
+            'settings-updated' => 'Settings updated successfully',
+            'session_deleted'=> 'session deleted successfully',
+            'session_created'=> 'session created successfully',
+            'session_updated'=> 'session updated successfully',
         ];
 
         $text = '';
@@ -143,14 +152,16 @@ class Menu {
             return;
         }
 
-         //  Enqueue base JS
-        wp_enqueue_script('dedu-base', \DEDU_URL . 'assets/js/base.js', [], '1.1.4', true );
-
         //Selectively enqueue the appropriate js script for each page
         $parts = explode('_page_', $hook);
         $slug = end($parts);
         $file_path = \DEDU_PATH . 'assets/js/pages/' . $slug . '.js';
         $file_url  = \DEDU_URL . 'assets/js/pages/' . $slug . '.js';
+
+        if ( 'dedu-settings' !== $slug ) {
+            //  Enqueue base JS
+            wp_enqueue_script('dedu-base', \DEDU_URL . 'assets/js/base.js', [], '1.1.4', true );
+        }
         
         if (file_exists($file_path)) {
            // 1. Enqueue the script as you normally do
@@ -161,6 +172,10 @@ class Menu {
                 wp_localize_script( $slug, 'deduStaffData', AssetProvider::get_staff_data());
             } elseif ('dedu-students' === $slug ) {
                 wp_localize_script( $slug, 'deduStudentData', AssetProvider::get_student_data());
+            } elseif ('dedu-sessions' === $slug ) {
+                wp_localize_script( $slug, 'deduSessionData', AssetProvider::get_session_data());
+            } elseif ('dedu-class-attendance' === $slug ) {
+                wp_localize_script( $slug, 'deduAttendance', AssetProvider::get_attendance_data());
             }
         }
 

@@ -18,4 +18,14 @@ class StudentParentModel {
             'relationship_type' => $relationship
         ]);
     }
+
+    public function unlink($student_id, $parent_id) {
+        global $wpdb;
+        $unlinked =  $wpdb->delete(
+            $this->table, 
+            ['student_id' => absint($student_id), 'parent_id'=> absint($parent_id)], 
+            ['%d','%d'] 
+        );
+        return false !== $unlinked; 
+    }
 }

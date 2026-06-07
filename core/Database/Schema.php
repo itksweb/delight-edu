@@ -244,6 +244,43 @@ class Schema {
             KEY class_id (class_id)
         ) $charset_collate;";
 
+        //-- 10. school session table
+        $table_sessions = $wpdb->prefix . 'dedu_sessions';
+        $sql_sessions = "CREATE TABLE $table_sessions (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            session_name varchar(20) NOT NULL,
+            starts date DEFAULT NULL,
+            ends date DEFAULT NULL,
+            PRIMARY KEY  (id)            
+        ) $charset_collate;";
+
+        //-- 11. School term table
+        $table_terms = $wpdb->prefix . 'dedu_terms';
+        $sql_terms = "CREATE TABLE $table_terms (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            session_id bigint(20) UNSIGNED NOT NULL,
+            term_name varchar(20) NOT NULL,
+            starts date DEFAULT NULL,
+            ends date DEFAULT NULL,
+            PRIMARY KEY  (id)            
+        ) $charset_collate;";
+
+        $table_attendance = $wpdb->prefix . 'dedu_attendance';
+        $sql_attendance = "CREATE TABLE $table_attendance (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            student_id bigint(20) UNSIGNED NOT NULL,
+            term_id bigint(20) UNSIGNED NOT NULL,
+            class_id bigint(20) UNSIGNED NOT NULL,
+            section_id bigint(20) UNSIGNED DEFAULT NULL,
+            attendance_date date NOT NULL,
+            status varchar(10) NOT NULL,
+            remarks varchar(255) DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY student_date (student_id, attendance_date)
+        ) $charset_collate;";
+
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql_staff_roles );
         dbDelta( $sql_capabilities );
@@ -259,5 +296,8 @@ class Schema {
         dbDelta( $sql_staff_assignments );
         dbDelta($sql_subject_sections );
         dbDelta($sql_subject_teachers );
+        dbDelta( $sql_terms );
+        dbDelta( $sql_sessions );
+        dbDelta( $sql_attendance );
     }
 }

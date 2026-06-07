@@ -2,6 +2,7 @@
 namespace DelightEDU\Controllers\Admin\Submenus;
 
 use DelightEDU\Controllers\Admin\MainRoot\SettingsController;
+use DelightEDU\Controllers\Admin\MainRoot\SessionController;
 class MainRootSubmenus {
 
     private $parent_slug = 'delight-edu';
@@ -30,6 +31,12 @@ class MainRootSubmenus {
                 'm-title'    => __('Setup School', 'delight-edu'),
                 'slug'     => 'dedu-setup-school',
                 'callback' => [$this, 'render_dashboard']
+            ],
+            [
+                'p-title'    => __('School Sessions', 'delight-edu'),
+                'm-title'    => __('School Sessions', 'delight-edu'),
+                'slug'     => 'dedu-sessions',
+                'callback' => [new SessionController(), 'render_sessions_page']
             ],
             
         ];

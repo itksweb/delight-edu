@@ -1,59 +1,20 @@
 console.log("base JS loaded");
+
 const itemTypeSlug = document.querySelector(".wrap").dataset.type;
 const itemType = itemTypeSlug
   .split("_")
   .map((str) => str.slice(0, 1).toUpperCase() + str.slice(1))
   .join(" ");
 
-const formView = document.querySelector("#dedu-form-view");
-const listView = document.querySelector("#dedu-list-view");
-const formTitle = formView.querySelector("h3");
-const listTitle = listView.querySelector("h3");
-const form = formView.querySelector("form");
-const submitBtn = form.querySelector('button[type="submit"]');
-
 const todaysDate = () => {
   const date = new Date();
   return date.toISOString().split("T")[0];
 };
-
+const target = (e, selector) => e.target.closest(selector);
 const isObjectEmpty = (obj) => {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
 };
 
-/*=========================================
-        ==>  TOAST NOTIFICATION  
-==========================================*/
-const showNotification = (toast) => {
-  setTimeout(() => toast.classList.add("show"), 200); // Delay slightly for smooth entrance
-  setTimeout(() => toast.classList.remove("show"), 4000); // Auto-hide after 4 seconds
-
-  // Optional: Clean the URL so the toast doesn't pop up again on refresh
-  if (window.history.replaceState) {
-    const url = new URL(window.location);
-    url.searchParams.delete("message");
-    url.searchParams.delete("error");
-    url.searchParams.delete("count");
-    window.history.replaceState({}, "", url);
-  }
-};
-/*=========================================
-        <==  TOAST NOTIFICATION  
-==========================================*/
-
-/*=========================================
-        ==>      PAGINATION  
-==========================================*/
-let rowsPerPage = document.querySelector("#dedu-rows-per-page").value || 10;
-const urlParams = new URLSearchParams(window.location.search); // Check URL for existing page number on load
-let currentPage = urlParams.has("paged") ? +urlParams.get("paged") : 1;
-
-const pageRows = document.querySelector("#dedu-rows-per-page");
-const pageNumbers = document.querySelector("#page-numbers");
-const prevPage = document.querySelector("#prev-page");
-const nextPage = document.querySelector("#next-page");
-
-const target = (e, selector) => e.target.closest(selector);
 const changeText = (title, btnText) => {
   formTitle.textContent = title;
   submitBtn.textContent = btnText;
@@ -81,6 +42,13 @@ const updatePhoto = (dropZone, src = "") => {
     dropZone.querySelector(".upload-icon").classList.remove("hidden");
   }
 };
+
+const formView = document.querySelector("#dedu-form-view");
+const listView = document.querySelector("#dedu-list-view");
+const formTitle = formView?.querySelector("h3");
+const listTitle = listView?.querySelector("h3");
+const form = formView?.querySelector("form");
+const submitBtn = form?.querySelector('button[type="submit"]');
 
 
 const updateHiddenInput = (id = null) => {
@@ -119,6 +87,64 @@ const updateUrlActionId = (id = null) => {
   window.history.pushState({}, "", url);
 };
 
+let rowsPerPage = document.querySelector("#dedu-rows-per-page").value || 10;
+
+const urlParams = new URLSearchParams(window.location.search); // Check URL for existing page number on load
+let currentPage = urlParams.has("paged") ? +urlParams.get("paged") : 1;
+
+const pageRows = document.querySelector("#dedu-rows-per-page");
+const pageNumbers = document.querySelector("#page-numbers");
+const prevPage = document.querySelector("#prev-page");
+const nextPage = document.querySelector("#next-page");
+
+// Rows Per Page Change
+pageRows.addEventListener("change", (e) => {
+  rowsPerPage = +e.target.value;
+  currentPage = 1;
+  paginateTable();
+});
+
+//  Go to specific page
+pageNumbers.addEventListener("click", (e) => {
+  if (e.target.classList.contains("page-num")) {
+    currentPage = +e.target.dataset.page;
+    paginateTable();
+  }
+});
+
+// Go to previous page
+prevPage.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    paginateTable();
+  }
+});
+
+//  Go to next page
+nextPage.addEventListener("click", () => {
+  currentPage++;
+  paginateTable();
+});
+
+const searchBox = document.querySelector("#dedu-search");
+searchBox.addEventListener("keyup", (e) => {
+  const value = e.target.value.toLowerCase().trim();
+  const noSearchResult = document.querySelector("#dedu-no-search-results");
+  const rows = document.querySelectorAll(".dedu-table-modern .is-row");
+  const filteredRows = [...rows].filter((row) => {
+    let rowName = row
+      .querySelector(".text-heading")
+      .textContent.toLowerCase()
+      .trim();
+    return rowName.startsWith(value);
+  });
+  const newRows = value ? filteredRows : [...rows];
+  currentPage = 1;
+  if (value && filteredRows.length === 0) noSearchResult.style.display = "";
+  paginateTable({ trs: newRows });
+});
+
+
 function renderPageNumbers(totalPages) {
   let html = "";
   if (totalPages > 1) {
@@ -129,14 +155,15 @@ function renderPageNumbers(totalPages) {
     }
   }
   pageNumbers.innerHTML = html;
-  // $("#page-numbers").html(html);
 }
 
 function updateURL(page) {
   const url = new URL(window.location);
-  if (urlParams.has("paged")) {
+  if (page === 1) {
+    url.searchParams.delete("paged");
+  } else {
+    url.searchParams.set("paged", page);
   }
-  url.searchParams.set("paged", page);
   window.history.pushState({}, "", url);
 }
 
@@ -149,7 +176,7 @@ const updateControlsState = (rows) => {
   ];
   const shouldDisable = dbEmpty || !rows.length;
   selectors.forEach(
-    (selector) => (document.querySelector(selector).disabled = shouldDisable)
+    (selector) => (document.querySelector(selector).disabled = shouldDisable),
   );
   if (shouldDisable) document.querySelector(selectors[0]).checked = false;
 };
@@ -185,68 +212,6 @@ const paginateTable = (trs = {}) => {
   updateControlsState(rows);
 };
 
-// Rows Per Page Change
-pageRows.addEventListener("change", (e) => {
-  rowsPerPage = +e.target.value;
-  currentPage = 1;
-  paginateTable();
-});
-
-//  Go to specific page
-pageNumbers.addEventListener("click", (e) => {
-  if (e.target.classList.contains("page-num")) {
-    currentPage = +e.target.dataset.page;
-    paginateTable();
-  }
-});
-
-// Go to previous page
-prevPage.addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    paginateTable();
-  }
-});
-
-//  Go to next page
-nextPage.addEventListener("click", () => {
-  currentPage++;
-  paginateTable();
-});
-
-/*========================================
-        <==      PAGINATION  
-==========================================
-
-
-
-==========================================
-      ==>  CONTROL STATE & SEARCH  
-==========================================*/
-const searchBox = document.querySelector("#dedu-search");
-searchBox.addEventListener("keyup", (e) => {
-  const value = e.target.value.toLowerCase().trim();
-  const noSearchResult = document.querySelector("#dedu-no-search-results");
-  const rows = document.querySelectorAll(".dedu-table-modern .is-row");
-  const filteredRows = [...rows].filter((row) => {
-    let rowName = row
-      .querySelector(".text-heading")
-      .textContent.toLowerCase()
-      .trim();
-    return rowName.startsWith(value);
-  });
-  const newRows = value ? filteredRows : [...rows];
-  currentPage = 1;
-  if (value && filteredRows.length === 0) noSearchResult.style.display = "";
-  paginateTable({ trs: newRows });
-});
-/*=========================================
-      <==  CONTROL STATE & SEARCH  
-===========================================*/
-
-/*=========================================
-        ==>  CUSTOM MULTIPLE SELECT  
-==========================================*/
 const customiseMultiselect = (tr = null) => {
   const base = tr ? tr : document;
 
@@ -262,7 +227,7 @@ const customiseMultiselect = (tr = null) => {
     if (values.length) {
       values.forEach((value) => {
         const optMatch = [...options].find(
-          (opt) => opt.dataset.value === value
+          (opt) => opt.dataset.value === value,
         );
         if (optMatch) {
           const tag = creatIt("span", "selected-tag", optMatch.textContent);
@@ -281,7 +246,7 @@ const customiseMultiselect = (tr = null) => {
       const option = e.target.closest('[role="option"]');
       if (!option) return;
       const realOption = [...select.options].find(
-        (o) => o.value === option.dataset.value
+        (o) => o.value === option.dataset.value,
       );
       realOption.selected = !realOption.selected;
       option.setAttribute("aria-selected", realOption.selected);
@@ -384,16 +349,13 @@ const customiseMultiselect = (tr = null) => {
   });
   return tr;
 };
-/*=========================================
-        <==  CUSTOM MULTIPLE SELECT  
-==========================================*/
- 
- 
-/*=========================================
-        ==>  SELECTION CHECKBOXES  
-==========================================*/
+
 // --- 1. SELECT ALL OR UNSELECT ALL ---
-const checkUncheckAll = (allToggleSelector, boxesSelector, container = document) => {
+const checkUncheckAll = (
+  allToggleSelector,
+  boxesSelector,
+  container = document,
+) => {
   const allToggle = container.querySelector(allToggleSelector);
   const boxes = container.querySelectorAll(boxesSelector);
   allToggle?.addEventListener("change", (e) => {
@@ -415,7 +377,7 @@ const checkUncheckSingle = (container, allToggleSelector, cls) => {
 
         //  Count how many of those visible boxes are checked
         const checkedVisibleCount = visibleCheckboxes.filter(
-          (cb) => cb.checked
+          (cb) => cb.checked,
         ).length;
 
         //  Update the master "Select All" state
@@ -428,11 +390,6 @@ const checkUncheckSingle = (container, allToggleSelector, cls) => {
     });
   }
 };
-/*=======================================
-        <==  SELECTION CHECKBOXES  
-=========================================*/
-
-
 
 /*=========================================
         ==>      BULK ACTION  
@@ -456,7 +413,7 @@ const bulkAction = (applyBulkBtn, actionSelector, selectedSelector) => {
     if (
       action === "delete" &&
       !confirm(
-        `Are you sure you want to delete ${selectedIds.length} ${itemType}s?`
+        `Are you sure you want to delete ${selectedIds.length} ${itemType}s?`,
       )
     ) {
       return;
@@ -483,7 +440,7 @@ const bulkAction = (applyBulkBtn, actionSelector, selectedSelector) => {
     addInput(`${itemTypeSlug}s_ids`, selectedIds.join(","));
     addInput(
       `dedu-${itemTypeSlug}-nonce`,
-      document.querySelector(`#dedu-${itemTypeSlug}-nonce`)?.value || ""
+      document.querySelector(`#dedu-${itemTypeSlug}-nonce`)?.value || "",
     );
 
     // 7. Submit
@@ -494,8 +451,6 @@ const bulkAction = (applyBulkBtn, actionSelector, selectedSelector) => {
 /*=======================================
         <==      BULK ACTION  
 =========================================*/
-
-
 
 const showFormView = () => {
   listView.classList.add("hide-me");
@@ -531,8 +486,6 @@ const deleteOne = (e) => {
     window.location.href = `${baseAdminUrl}?action=dedu_delete_${itemTypeSlug}&id=${id}&_wpnonce=${nonce}`;
   }
 };
-
-
 
 // staff and role
 const displayPermissionsGroup = (action, grp) => {

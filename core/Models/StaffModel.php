@@ -43,18 +43,8 @@ class StaffModel {
     public function create() {
         global $wpdb;  
         
-        $user = [];
-        $user['email'] = sanitize_user($_POST['email']);
-        $user['password'] = !empty($_POST['password']) ? $_POST['password'] : "PA\$\$1ng";
-
-       
         // 1. Create the WordPress User first
-        $user_id = Helpers::create_wp_user($user);
-        if (is_wp_error($user_id) || !$user_id) {
-            $user_id = null; 
-        } else {
-            $user_id = (int) $user_id;
-        }
+        $user_id = Helpers::create_wp_user($_POST);
         
         // Sanitize the data
         $schema = $this->get_staff_schema();

@@ -4,7 +4,6 @@ const subjectRows = document.querySelector("#subject-rows");
 const addRowBtn = document.querySelector("#add-row");
 
 function addNewRow(id, data = null) {
-  // Replaces: $("#subject-rows tr").length
   const index = subjectRows.getElementsByTagName("tr").length;
   const availableSections = DEDU_MASTER_DATA.sections[id] || [];
 

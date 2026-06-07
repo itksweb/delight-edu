@@ -36,11 +36,26 @@ class StudentModel {
         ];
     }
 
+    public function add_parent_to_student($parent_data, $index, $student_id = null) {
+        $parent_model = new ParentModel();
+        $student_parent_model = new StudentParentModel();
+        $mode = $parent_data['mode'];
+        $relationship = sanitize_text_field($parent_data['relationship']);
+        $parent_id = $mode === "existing" 
+            ? absint($parent_data['existing_id']) // Get the existing parent ID from the form
+            : $parent_model->create($parent_data, $index); // or Create a new parent and get its ID
+        if ($parent_id && $student_id) {
+            // Link the parent to the student with the specified relationship
+            $student_parent_model->link($student_id, $parent_id, $relationship);
+        }
+    }
+
     public function create() {
         global $wpdb;
         $user = [];
-        $user['email'] = sanitize_user($_POST['email']); 
-        $user['password'] = !empty($_POST['password']) ? $_POST['password'] : "PA\$\$1ng";
+        $user['email'] = $_POST['email']; 
+        $user['password'] = $_POST['password'];
+        $user['phone'] = $_POST['phone'];
         
         // 1. Create the WordPress User first
         $user_id = Helpers::create_wp_user($user, "dedu_student");
@@ -49,95 +64,109 @@ class StudentModel {
             $user_id = null; 
         } 
         
-        
         // Sanitize the data
         $schema = $this->get_student_schema();
         $photoKey = !isset($_POST['student_photo']) ? 'student_photo':'';
-        $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
+
+        // Handle File Upload
+        $profile_picture_id = '';
+        if ($photoKey && !empty($_FILES[$photoKey]['name'])) {
+           $profile_picture_id = Helpers::upload_user_photo($photoKey, $user_id );
+        }
+        $sanitized_data = Helpers::sanitize_data($schema, $user_id);
 
         //  Generate student ID Number
         $prefix = get_option('dedu_student_id_prefix', 'EDU');
         $prefix = rtrim($prefix, '-') . '-' . date('y') . '-';
-        $student_id_number = Helpers::generate_unique_id($prefix);
+        $admission_no = Helpers::generate_unique_id($prefix);
 
-        $prep = [];
-        $prep["user_id"] = $user_id;
-        $prep['admission_no'] = $student_id_number;
-
-        
+        //  Add the generated admission number and WP user ID to the schema data
         $data = $sanitized_data[0];
         $formats = $sanitized_data[1];
-        $data = $prep + $data;
-        $formats = ['%d', '%s'] + $formats;
-
+        Helpers::add_to_schema($data, $formats, $profile_picture_id, 'profile_picture_id' );
+        Helpers::add_to_schema($data, $formats, $admission_no, 'admission_no' );
+        Helpers::add_to_schema($data, $formats, $user_id, 'user_id');
+        
         // 3. Insert into custom table
         $inserted =  $wpdb->insert( $this->table, $data, $formats );
 
         if ($inserted){
             $parent_data = $_POST['parents'];
             $student_id = $wpdb->insert_id;
-            $parent_model = new ParentModel();
-            $student_parent_model = new StudentParentModel();
-            foreach($parent_data as $parent){
-                $relationship = isset($parent['relationship']) ? $parent['relationship']: "";
-                $parent_id = $parent['mode'] === "existing" 
-                    ? absint($parent['existing_id'])
-                    : $parent_model->create($parent);
-                if ($parent_id ) {
-                    $student_parent_model->link($student_id, $parent_id, $relationship);
-                }
+            foreach($parent_data as $index => $parent){
+                if (empty($parent['mode']) || empty($parent['relationship'])) continue;
+                // If mode is set, it means we are linking an either existing parent or a new one
+                $this->add_parent_to_student($parent, $index, $student_id);
             }
         }
         return $inserted ? $student_id : false;
     }
-
+    
     public function update($student_id) {
         global $wpdb;
 
-         // Sanitize the data
+        // Show database errors if any occur
+        // $wpdb->show_errors();
+
+        // Sanitize the data using your helper
         $schema = $this->get_student_schema();
-        $photoKey = !isset($_POST['student_photo']) ? 'student_photo':'';
-        $user_id = isset($_POST['wp_user_id']) ? absint($_POST['wp_user_id']): null;
+        $photoKey = !isset($_POST['student_photo']) ? 'student_photo' : '';
+        $user_id = isset($_POST['wp_user_id']) ? absint($_POST['wp_user_id']) : null;
+        
         $sanitized_data = Helpers::sanitize_data($schema, $user_id, $photoKey);
-        $data = $sanitized_data[0];
-        $done = $wpdb->update($this->table, $data, 
+        
+        $data    = $sanitized_data[0]; // Extracted array data
+        $formats = $sanitized_data[1]; // Extracted exact column formats (%s, %d)
+
+        // Run the update query safely
+        $done = $wpdb->update(
+            $this->table, 
+            $data, 
             ['id' => $student_id], // The WHERE clause
-            null,          // Format (auto-detected usually)
-            ['%d']         // Format of the WHERE clause
+            $formats,              // Pass the true column formats here!
+            ['%d']                 // Format of the WHERE clause
         );
 
-        if ($done) {
-            $parent_data = $_POST['parents'];
-        $parent_model = new ParentModel();
-        $student_parent_model = new StudentParentModel();
-        foreach($parent_data as $parent){
-            if (isset($parent['mode'])) {
-                $parent_id = $parent['mode'] === "existing" 
-                    ? absint($parent['existing_id'])
-                    : $parent_model->create($parent);
-                if ($parent_id ) {
-                    $relationship = isset($parent['relationship']) ? $parent['relationship']: "";
-                    $student_parent_model->link($student_id, $parent_id, $relationship);
-                }
-            } else {
-                $parent_id = isset($parent['parent_id']) ? $parent['parent_id'] : null;
-                if ($parent_id) {
-                    $parent_model->update($parent_id, $parent);
+        // // 🔴 LOG THE RESULT
+        // error_log("DB Return Value: " . var_export($done, true));
+
+        if (false !== $done) {
+            $parent_data = $_POST['parents'];  
+            foreach($parent_data as $index => $parent){
+                if (!empty($parent['mode']) && !empty($parent['relationship'])){
+                    // If mode is set, it means we are linking an either existing parent or a new one
+                    $this->add_parent_to_student($parent, $index, $student_id);
+                } else if (!empty($parent['parent_id'])) {
+                    $parent_id = absint($parent['parent_id']);
+                    $unlink_id = !empty($parent['unlink']) ? absint($parent['unlink']) : null;
+                    // error_log("unlink id: " . $unlink_id ." parent id: ". $parent_id);
+                    if ($unlink_id === 1 ) {
+                        $student_parent_model = new StudentParentModel();
+                        $student_parent_model->unlink($student_id, $parent_id);
+                    } else {
+                        $parent_model = new ParentModel();
+                        $parent_model->update($parent, $index);
+                    }
+                    
                 }
             }
-            
-        }
         }
 
-        return $done;
+        if ($done === false) {
+            error_log("DB Error Message: " . $wpdb->last_error);
+        }
+
+        // If $done is 0, it means it worked perfectly but no data fields actually changed values.
+        // false !== $done ensures both 0 rows changed and positive values count as a true success!
+        return false !== $done;
     }
-
+    
     public function delete( $id ) {
         global $wpdb;
 
         // 1. Fetch the WP User ID BEFORE deleting the student record
         $student_record = $wpdb->get_row( $wpdb->prepare(
-            "SELECT wp_user_id FROM {$this->table} WHERE id = %d", 
+            "SELECT user_id FROM {$this->table} WHERE id = %d", 
             $id 
         ));
 
@@ -149,7 +178,7 @@ class StudentModel {
         $result = $wpdb->delete($this->table, [ 'id' => $id ], [ '%d' ]  );
 
         // 4. Now delete the actual WordPress User if it exists
-        if ( ! empty( $student_record->wp_user_id ) ) {
+        if ( ! empty( $student_record->user_id ) ) {
             // Note: wp_delete_user needs the ID, and optionally a 'reassign' ID
             require_once( ABSPATH . 'wp-admin/includes/user.php' ); // Ensure function is loaded
             wp_delete_user( $student_record->wp_user_id );
@@ -157,6 +186,7 @@ class StudentModel {
 
         return false !== $result;
     }
+    
 
     public function get_all() {
         global $wpdb;

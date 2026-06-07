@@ -28,16 +28,44 @@ const disableOptions = (select, selected = [], storedParents = []) => {
   });
 };
 
-const updateParentOptions = () => {
+const getVisibleParentEntries = (allEntries) => {
+  return [...allEntries].filter(
+    (en) => en.style.display !== "none" || en.checkVisibility(),
+  );
+};
+
+const updateParentOptions = (checked = null) => {
+  if (checked) {
+    const sRel = allParents.find((pa) => pa.id === checked.value).relationship;
+    const rels = checked
+      .closest(".parent-entry")
+      .querySelectorAll(".input-rel");
+
+    [...rels].forEach((rel) => {
+      if (
+        !["mother", "father"].includes(rel.value) &&
+        !["mother", "father"].includes(sRel)
+      ) {
+        rel.value = sRel;
+      }
+      rel.checked = rel.value === sRel;
+    });
+    console.log(
+      checked.closest(".parent-entry").querySelector(".input-rel:checked"),
+    );
+  }
   const allEntries = parentsContainer.querySelectorAll(
     ".existing-parent-selector select",
   );
+
+  const visibleEntries = getVisibleParentEntries(allEntries);
+
   // Update selectedParents based on current selections
-  selectedParents = [...allEntries]
+  selectedParents = visibleEntries
     .map((select) => select.value)
     .filter((val) => val);
 
-  allEntries.forEach((select) => {
+  visibleEntries.forEach((select) => {
     disableOptions(
       select,
       selectedParents.filter((id) => id !== select.value),
@@ -58,7 +86,9 @@ const populateParentOptions = (select, options) => {
 
 const updateParentButtonState = () => {
   const allEntries = parentsContainer.querySelectorAll(".parent-entry");
-  addBtn.disabled = allEntries.length >= 3;
+  const visibleEntries = [...allEntries].filter(en => !en.matches(".hide-me"));
+  console.log("Visible Entries: ", visibleEntries.length);
+  addBtn.disabled = visibleEntries.length >= 3;
 };
 
 function handleFiles(dropZone, files, fileInput) {
@@ -192,7 +222,6 @@ const buildOptionsAndPickOne = (classId = null, sectionId = null) => {
   if (classId) {
     const hasSections = sections[classId] && sections[classId].length;
     const class_name = classes.find((cls) => cls.id === classId).class_name;
-    console.log("");
     if (hasSections) {
       options = `<option value = "">All Sections</option>`;
       options += sections[classId]
@@ -212,22 +241,26 @@ const populateFields = (form, data = {}) => {
   const inputs = form.querySelectorAll("input, select, textarea");
   // First reset all fields to default/empty values before populating with new data
   inputs.forEach((input) => {
-    if (["radio", "checkbox"].includes(input.type)) {
-      input.checked = false;
-    } else if (input.type !== "hidden") {
-      input.value = "";
+    if (input.type !== "hidden") {
+      ["radio", "checkbox"].includes(input.type)
+        ? (input.checked = false)
+        : (input.value = "");
     }
   });
   // Now populate with new data if available
   if (!isObjectEmpty(data)) {
     inputs.forEach((input) => {
-      if (input.name) {
+      if (input.name && input.type !== "hidden") {
         const parField = input.name.startsWith("parents[");
         const key = parField
           ? input.name.split("][")[1].slice(0, -1)
           : input.name;
         if (!key.endsWith("_photo")) {
           input.value = data[key] ? data[key] : "";
+        } else {
+          const dropZone = input.closest(".dedu-upload-container");
+          updatePhoto(dropZone, data.photo_url);
+          console.log("doneee");
         }
       }
     });
@@ -288,6 +321,7 @@ const renderEditScreen = async (e) => {
       // Populate Basic Fields
       formTitle.textContent = `Edit student: ${student.first_name} ${student.last_name}`;
       submitBtn.textContent = "Update student";
+      wpUser.value = student.user_id;
       updatePhoto(pixZone, student.photo_url);
       parentsContainer.replaceChildren();
       populateFields(studentForm, student); // populate student details in form fields
@@ -297,17 +331,24 @@ const renderEditScreen = async (e) => {
       const studentParents = allParents.filter((par) =>
         parents.includes(par.id),
       );
+      const parentIdInput = (parent, i) => {
+        const parentIdInput = document.createElement("input");
+        parentIdInput.type = "hidden";
+        parentIdInput.name = `parents[${i}][parent_id]`;
+        parentIdInput.value = parent.id; // Or dynamically assign an ID if needed
+        return parentIdInput;
+      };
+
+      const unlinkIdInput = (i) => {
+        const unlinkIdInput = document.createElement("input");
+        unlinkIdInput.type = "hidden";
+        unlinkIdInput.name = `parents[${i}][unlink]`;
+        unlinkIdInput.value = "0";
+        unlinkIdInput.classList.add("unlink-tracker");
+        return unlinkIdInput;
+      };
 
       if (studentParents.length) {
-        // Create your new hidden input element for parent_id and append it to the parentFields container
-        const createHiddenInput = (parent, i) => {
-          const hiddenInput = document.createElement("input");
-          hiddenInput.type = "hidden";
-          hiddenInput.name = `parents[${i}][parent_id]`;
-          hiddenInput.value = parent.id; // Or dynamically assign an ID if needed
-          return hiddenInput;
-        };
-
         studentParents.forEach((parent, i) => {
           const newParent = parentTemplate.content.cloneNode(true);
           const entry = newParent.querySelector(".parent-entry");
@@ -319,8 +360,11 @@ const renderEditScreen = async (e) => {
           populateFields(entry, parent); // populate parent details in form fields
           entry.querySelector(".dedu-parent-guardian-top").remove();
           entry.querySelector("legend").textContent = parent.relationship;
+          entry.querySelector(`input[name='parents[${i}][wp_user_id]']`).value =
+            parent.wp_user_id;
           const parentFields = entry.querySelector(".parent-fields");
-          parentFields.prepend(createHiddenInput(parent, i)); // add hidden input for parent_id
+          parentFields.prepend(parentIdInput(parent, i)); // add hidden input for parent_id
+          parentFields.prepend(unlinkIdInput(i)); // add hidden input for unlink tracking
           parentModeSwitch(newParent, "fromDb");
           if (i > 0) removeParentBtn.classList.remove("hide-me");
           parentsContainer.appendChild(newParent);
@@ -354,7 +398,8 @@ document.addEventListener("change", function (e) {
     e.target.matches(".radio-input")
   ) {
     // parent-student relationship switch
-    const parentNewTitle = target(e, ".parent-entry").querySelector("legend");
+    const parent = target(e, ".parent-entry");
+    const parentNewTitle = parent.querySelector("legend");
     const othersBtn = target(e, ".rel-switch").querySelector(".others-btn");
     const input = target(e, ".rel-switch").querySelector(".radio-input");
     if (["mother", "father"].includes(e.target.value)) {
@@ -370,7 +415,7 @@ document.addEventListener("change", function (e) {
       input.focus();
     }
   } else if (e.target.matches(".existing-parent-selector select")) {
-    updateParentOptions();
+    updateParentOptions(e.target);
   } else if (e.target === classField) {
     buildOptionsAndPickOne(classField.value, sectionId);
   }
@@ -380,8 +425,13 @@ parentsContainer.addEventListener("click", function (e) {
   // Remove Parent Logic
   if (e.target && target(e, ".remove-parent-btn")) {
     const entry = target(e, ".parent-entry");
-    const select = entry.querySelector(".existing-parent-selector select");
-    entry.remove();
+    const isFromDb = entry.querySelector(".unlink-tracker");
+    if (isFromDb) {
+      isFromDb.value = "1"; // Mark for unlinking on server side
+      entry.classList.add("hide-me"); // Hide the entry visually
+    } else {
+      entry.remove();
+    }
     updateParentOptions();
     updateParentButtonState();
   } else if (target(e, ".others")) {
@@ -399,14 +449,25 @@ parentsContainer.addEventListener("click", function (e) {
   }
 });
 
+const eitherInput = (par, i) => {
+  const emailInput = par.querySelector(`input[name="parents[${i}][email]"]`);
+  const phoneInput = par.querySelector(`input[name="parents[${i}][phone]"]`);
+  const emailValue = emailInput.value.trim();
+  const phoneValue = phoneInput.value.trim();
+  return !emailValue && !phoneValue;
+};
+
 // 2. Add New Parent Logic
 addBtn.addEventListener("click", function () {
   const allEntries = parentsContainer.querySelectorAll(".parent-entry");
+  const visibleEntries = [...allEntries].filter(
+    (en) => !en.matches(".hide-me"),
+  );
+  console.log("Visible: ", visibleEntries.length)
 
-  if (allEntries.length < 3) {
-    if (allEntries.length > 0) {
-      const lastIndex = allEntries.length - 1;
-      const prevEntry = allEntries[lastIndex];
+  if (visibleEntries.length < 3) {
+    if (visibleEntries.length > 0) {
+      const prevEntry = visibleEntries[visibleEntries.length - 1];
       const formTop = prevEntry.querySelector(".dedu-parent-guardian-top");
       if (formTop) {
         const requiredSelect = formTop.querySelector(
@@ -428,6 +489,16 @@ addBtn.addEventListener("click", function () {
           );
           return;
         }
+        const modeSelected = prevEntry.querySelector(
+          ".parent-mode-switch:checked",
+        );
+        if (modeSelected.value === "new") {
+          const eitherEmpty = eitherInput(prevEntry, visibleEntries.length - 1);
+          if (eitherEmpty) {
+            alert("Please provide an Email or a Phone Number for the parent.");
+            return;
+          }
+        }
       }
 
       const requiredInputs = prevEntry.querySelectorAll(
@@ -443,10 +514,10 @@ addBtn.addEventListener("click", function () {
     const newParent = parentTemplate.content.cloneNode(true);
     newParent
       .querySelector(".parent-entry")
-      .setAttribute("data-index", allEntries.length);
-    updateNameAttrForParent(newParent, allEntries.length); // update name attributes to parents[i]..
+      .setAttribute("data-index", visibleEntries.length);
+    updateNameAttrForParent(newParent, visibleEntries.length); // update name attributes to parents[i]..
     const removeParentBtn = newParent.querySelector(".remove-parent-btn");
-    if (allEntries.length > 0) removeParentBtn.classList.remove("hide-me");
+    if (visibleEntries.length > 0) removeParentBtn.classList.remove("hide-me");
     const select = newParent.querySelector(".existing-parent-selector select");
     populateParentOptions(select, allParents);
     disableOptions(select, selectedParents, storedParents);
@@ -463,7 +534,20 @@ addBtn.addEventListener("click", function () {
 
 document.querySelector("form").addEventListener("submit", function (e) {
   // Stop the form from redirecting/refreshing the page immediately
-  e.preventDefault();
+  // e.preventDefault();
+  parentsContainer.querySelectorAll(".parent-entry").forEach((entry, i) => {
+    const editMode = entry.querySelector(
+      `input[name="parents[${i}][parent_id]"]`,
+    );
+    const modeSelected = entry.querySelector(".parent-mode-switch:checked");
+    if (editMode || modeSelected.value === "new") {
+      const eitherEmpty = eitherInput(entry, i);
+      if (eitherEmpty) {
+        alert("Please provide an Email or a Phone Number for all parents.");
+        return;
+      }
+    }
+  });
 
   // 1. Gather all the inputs from the form
   const formData = new FormData(this);
