@@ -1,4 +1,5 @@
 <?php
+$data_name = str_replace('_', ' ', $data_name);
 $text = $data_name === "class subjects" ? "Assign subjects to class" : "Add A New {$data_name}";
 ?>
 <div class="dedu-tab-header">

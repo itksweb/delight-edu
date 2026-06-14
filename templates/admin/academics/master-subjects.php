@@ -1,11 +1,11 @@
 <?php
 if (!defined('ABSPATH')) exit;
 $part = \DEDU_PATH . 'templates/admin/partials';
-$data_name = "master subject";
+$data_name = "master_subject";
 $tspan = "5"
 ?>
 
-<div class="wrap dedu-admin-wrapper" data-type="master_subject"> 
+<div class="wrap dedu-admin-wrapper" data-type="<?php echo $data_name ?>"> 
     <!-- <?php wp_nonce_field('dedu_bulk_roles_action', 'dedu-master-subject-nonce'); ?> -->
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Master Subject List</h1>

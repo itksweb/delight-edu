@@ -1,10 +1,9 @@
 <?php
-if (!defined('ABSPATH')) {
-    exit;
-}
+if (!defined('ABSPATH'))  exit;
+$data_name = "settings";
 ?>
 
-<div class="wrap dedu-admin-wrapper" data-type="settings"> 
+<div class="wrap dedu-admin-wrapper" data-type="<?php echo $data_name ?>"> 
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">School System Configuration</h1>
     </div>
@@ -132,9 +131,5 @@ if (!defined('ABSPATH')) {
 
 <!-- <script>
     // Simple live preview for the admin
-    document.getElementById('staff_id_prefix').addEventListener('input', function() {
-        const prefix = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Clean prefix
-        const year = '<?php echo date('y'); ?>';
-        document.getElementById('prefix-preview').textContent = (prefix || '___') + '-' + year + '-001';
-    });
+    
 </script> -->

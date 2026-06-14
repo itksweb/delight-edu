@@ -1,12 +1,12 @@
 <?php
 if (!defined('ABSPATH')) exit;
 $part = \DEDU_PATH . 'templates/admin/partials';
-$data_name = "class subjects";
+$data_name = "class_subjects";
 $tspan = "5";
 $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 ?>
 
-<div class="wrap dedu-admin-wrapper" data-type="class_subjects">
+<div class="wrap dedu-admin-wrapper" data-type="<?php echo $data_name ?>">
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Manage Class Subjects<</h1>
     </div>

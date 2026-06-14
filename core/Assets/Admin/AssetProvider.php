@@ -93,12 +93,14 @@ class AssetProvider {
     public static function get_attendance_data() {
         $data = self::get_classes_and_sections();
         $active_term = self::get_active_term();
+        $holidays = get_option('dedu_school_holidays', array());
         return [
             'ajaxurl'         => admin_url('admin-ajax.php'),
             'nonce'           => wp_create_nonce('dedu_attendance_nonce'),
             'classes'         => $data['classes'],
             'sections' => $data['sections_by_class'],
-            'active_term'=> $active_term ? $active_term : null
+            'active_term'=> $active_term ? $active_term : null,
+            // 'holidays'    => $holidays
         ];
     }
 

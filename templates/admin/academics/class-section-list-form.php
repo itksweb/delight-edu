@@ -5,7 +5,7 @@ $data_name = "class";
 $tspan = "5"
 ?>
 
-<div class="wrap dedu-admin-wrapper" data-type="class">
+<div class="wrap dedu-admin-wrapper" data-type="<?php echo $data_name ?>">
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Classes And Sections Management</h1>
     </div>

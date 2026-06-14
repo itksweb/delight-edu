@@ -49,6 +49,7 @@ const formTitle = formView?.querySelector("h3");
 const listTitle = listView?.querySelector("h3");
 const form = formView?.querySelector("form");
 const submitBtn = form?.querySelector('button[type="submit"]');
+const pageRows = document.querySelector("#dedu-rows-per-page");
 
 
 const updateHiddenInput = (id = null) => {
@@ -87,25 +88,24 @@ const updateUrlActionId = (id = null) => {
   window.history.pushState({}, "", url);
 };
 
-let rowsPerPage = document.querySelector("#dedu-rows-per-page").value || 10;
+let rowsPerPage = pageRows ? pageRows.value : 10;
 
 const urlParams = new URLSearchParams(window.location.search); // Check URL for existing page number on load
 let currentPage = urlParams.has("paged") ? +urlParams.get("paged") : 1;
 
-const pageRows = document.querySelector("#dedu-rows-per-page");
 const pageNumbers = document.querySelector("#page-numbers");
 const prevPage = document.querySelector("#prev-page");
 const nextPage = document.querySelector("#next-page");
 
 // Rows Per Page Change
-pageRows.addEventListener("change", (e) => {
+pageRows?.addEventListener("change", (e) => {
   rowsPerPage = +e.target.value;
   currentPage = 1;
   paginateTable();
 });
 
 //  Go to specific page
-pageNumbers.addEventListener("click", (e) => {
+pageNumbers?.addEventListener("click", (e) => {
   if (e.target.classList.contains("page-num")) {
     currentPage = +e.target.dataset.page;
     paginateTable();
@@ -113,7 +113,7 @@ pageNumbers.addEventListener("click", (e) => {
 });
 
 // Go to previous page
-prevPage.addEventListener("click", () => {
+prevPage?.addEventListener("click", () => {
   if (currentPage > 1) {
     currentPage--;
     paginateTable();
@@ -121,13 +121,13 @@ prevPage.addEventListener("click", () => {
 });
 
 //  Go to next page
-nextPage.addEventListener("click", () => {
+nextPage?.addEventListener("click", () => {
   currentPage++;
   paginateTable();
 });
 
 const searchBox = document.querySelector("#dedu-search");
-searchBox.addEventListener("keyup", (e) => {
+searchBox?.addEventListener("keyup", (e) => {
   const value = e.target.value.toLowerCase().trim();
   const noSearchResult = document.querySelector("#dedu-no-search-results");
   const rows = document.querySelectorAll(".dedu-table-modern .is-row");

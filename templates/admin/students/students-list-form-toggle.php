@@ -9,7 +9,7 @@ $part = \DEDU_PATH . 'templates/admin/partials';
 $data_name = "student";
 $tspan = "6"
 ?>
-<div class="wrap list-form dedu-admin-wrapper" data-type="student"> 
+<div class="wrap list-form dedu-admin-wrapper" data-type="<?php echo $data_name ?>"> 
     <!-- <?php wp_nonce_field('dedu_bulk_roles_action', 'dedu-student-nonce'); ?> -->
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">students Management</h1>

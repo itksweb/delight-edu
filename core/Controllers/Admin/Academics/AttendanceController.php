@@ -27,7 +27,7 @@ class AttendanceController {
         $date     = isset($_POST['attendance_date']) ? sanitize_text_field($_POST['attendance_date']) : '';
 
         if (!$class_id || empty($date)) {
-            wp_send_json_error('Invalid parameters provided.');
+            wp_send_json_error('Invalid parameters provided. Please provide the date and class');
         }
 
         global $wpdb;
@@ -83,21 +83,20 @@ class AttendanceController {
         }
 
         wp_send_json_success([
-            'term' => $term->id,
+            'term' => $term,
             'roster'  => $roster_payload
         ]);
     }
 
-    function ajax_handle_save_attendance_sheet() {
+    public function ajax_handle_save_attendance_sheet() {
         check_ajax_referer('dedu_save_attendance_action', 'attendance_nonce');
 
         $class_id   = isset($_POST['class_id']) ? absint($_POST['class_id']) : 0;
-        $section_id = isset($_POST['section_id']) ? absint($_POST['section_id']) : 0;
         $term_id    = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
         $date       = isset($_POST['attendance_date']) ? sanitize_text_field($_POST['attendance_date']) : '';
         $attendance = isset($_POST['attendance']) ? $_POST['attendance'] : [];
 
-        if (!$class_id || !$section_id || !$term_id || empty($date) || empty($attendance)) {
+        if (!$class_id || !$term_id || empty($date) || empty($attendance)) {
             wp_send_json_error('Required roster parameters are missing.');
         }
 
@@ -110,16 +109,21 @@ class AttendanceController {
 
         foreach ($attendance as $student_id => $data) {
             $student_id = absint($student_id);
+            $section_id = absint($data['section_id']);
             $status     = sanitize_text_field($data['status']);
             $remarks    = sanitize_text_field($data['remarks']);
 
             $placeholders[] = "(%d, %d, %d, %d, %s, %s, %s)";
-            merge_arrays_inline($values, [$student_id, $term_id, $class_id, $section_id, $date, $status, $remarks]);
+
+            // 🔴 Merges the new row values straight into your existing master array
+            $values = array_merge($values, [$student_id, $term_id, $class_id, $section_id, $date, $status, $remarks]);
         }
 
         if (empty($values)) {
             wp_send_json_error('No valid attendance data records processed.');
         }
+        error_log("hello attendance: " . print_r($values, true));
+
 
         // Combine placeholders into one query block string structure
         $query = "INSERT INTO $table_name 
@@ -132,20 +136,8 @@ class AttendanceController {
         $prepared_query = $wpdb->prepare($query, $values);
         $result = $wpdb->query($prepared_query);
 
-        if ($result !== false) {
-            wp_send_json_success('Attendance roster saved perfectly.');
-        } else {
-            wp_send_json_error('Database transaction execution error encountered.');
-        }
+        $result !== false 
+            ? wp_send_json_success('Attendance roster saved perfectly.')
+            : wp_send_json_error('Database transaction execution error encountered.');
     }
-
-    /**
-     * Clean helper utility to flatten data mappings safely
-     */
-    function merge_arrays_inline(&$master, $items) {
-        foreach ($items as $item) {
-            $master[] = $item;
-        }
-    }
-
 }

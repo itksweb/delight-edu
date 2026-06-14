@@ -157,10 +157,30 @@ class Menu {
         $slug = end($parts);
         $file_path = \DEDU_PATH . 'assets/js/pages/' . $slug . '.js';
         $file_url  = \DEDU_URL . 'assets/js/pages/' . $slug . '.js';
+        $dateWell = ["dedu-class-attendance"];
 
         if ( 'dedu-settings' !== $slug ) {
             //  Enqueue base JS
             wp_enqueue_script('dedu-base', \DEDU_URL . 'assets/js/base.js', [], '1.1.4', true );
+        }
+
+        if (in_array($slug, $dateWell, true)){
+            // 1. Enqueue the self-hosted Flatpickr styling core
+            wp_enqueue_style(
+                'dedu-datepicker-css', 
+                \DEDU_URL . 'assets/css/dedu-date-picker.css', 
+                [], 
+                '1.0.1'
+            );
+
+            // 2. Enqueue the self-hosted Flatpickr engine worker 
+            wp_enqueue_script(
+                'dedu-datepicker-js', 
+                \DEDU_URL . 'assets/js/dedu-date-picker.js', 
+                [], 
+                '1.0.1', 
+                true
+            );
         }
         
         if (file_exists($file_path)) {

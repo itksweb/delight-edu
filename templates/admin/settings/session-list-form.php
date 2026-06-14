@@ -5,7 +5,7 @@ $data_name = "session";
 $tspan = "5";
 ?>
 
-<div class="wrap dedu-admin-wrapper" data-type="session">
+<div class="wrap dedu-admin-wrapper" data-type="<?php echo $data_name ?>">
     <div class="dedu-page-header">
         <h1 class="dedu-page-title">Manage School Session<</h1>
     </div>
@@ -157,6 +157,3 @@ $tspan = "5";
         }
     }    
 </style>
-<script>
-    
-</script>

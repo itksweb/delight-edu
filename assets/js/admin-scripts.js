@@ -1,5 +1,5 @@
 console.log("Dedu JS Active");
-const listForm = ["settings"];
+const listForm = ["settings", "attendance"];
 
 /*=========================================
         ==>  TOAST NOTIFICATION  
